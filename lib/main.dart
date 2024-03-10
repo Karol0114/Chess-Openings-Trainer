@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:chess_openings_trainer/play_openings.dart';
 import 'package:chess_openings_trainer/learn_openings_page.dart';
 import 'package:chess_openings_trainer/openings_score_page.dart';
+import 'package:chess_openings_trainer/login_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -25,7 +26,7 @@ class MyApp extends StatelessWidget {
           bodyText2: TextStyle(color: Colors.white),
         ),
       ),
-      home: const MyHomePage(title: 'Chess Openings Trainer'),
+      home: const LoginPage(),
     );
   }
 }
