@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>API_KEY</key>
+	<string>AIzaSyAZKUptwh0h_3HfzkDsz8p0CYfAP9OqIOs</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1058632763798</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.chessOpeningsTrainer</string>
+	<key>PROJECT_ID</key>
+	<string>chess-openings-trainer-44052</string>
+	<key>STORAGE_BUCKET</key>
+	<string>chess-openings-trainer-44052.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1058632763798:ios:566c9bd5d773a1346735b7</string>
+</dict>
+</plist>
