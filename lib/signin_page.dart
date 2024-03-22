@@ -1,3 +1,4 @@
+import 'package:chess_openings_trainer/main.dart';
 import 'package:chess_openings_trainer/reusable_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:chess_openings_trainer/reusable_widget.dart';
@@ -49,8 +50,12 @@ class _SignInScreenState extends State<SignInScreen> {
                           email: _emailTextController.text,
                           password: _passwordTextController.text)
                       .then((value) {
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()));
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => MyHomePage(
+                                  title: "nwm test",
+                                )));
                   }).onError((error, stackTrace) {
                     print("Error ${error.toString()}");
                   });
