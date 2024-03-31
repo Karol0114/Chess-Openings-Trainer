@@ -1,8 +1,10 @@
 import 'package:chess_openings_trainer/chess_board.dart';
+import 'package:chess_openings_trainer/friends_page.dart';
 import 'package:chess_openings_trainer/learn_openings_page.dart';
 import 'package:chess_openings_trainer/signin_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'friends_page.dart';
 import 'package:chess_openings_trainer/play_openings.dart';
 //import 'package:chess_openings_trainer/learn_openings_page.dart';
 import 'package:chess_openings_trainer/openings_score_page.dart';
@@ -10,8 +12,11 @@ import 'package:chess_openings_trainer/openings_score_page.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
-    options: const FirebaseOptions(apiKey: "AIzaSyBuR58C-Uj32pOvbhXhdTPHknK1c5I5BUg", appId: "1:332377044451:android:852b3ea41d0c5f14311cd6", messagingSenderId: "332377044451", projectId: "chess-openings-trainer-ai")
-  );
+      options: const FirebaseOptions(
+          apiKey: "AIzaSyBuR58C-Uj32pOvbhXhdTPHknK1c5I5BUg",
+          appId: "1:332377044451:android:852b3ea41d0c5f14311cd6",
+          messagingSenderId: "332377044451",
+          projectId: "chess-openings-trainer-ai"));
   runApp(const MyApp());
 }
 
@@ -21,7 +26,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Chess Opening trainer',
+      title: 'Chess Openings Trainer',
       theme: ThemeData.dark().copyWith(
         colorScheme: ColorScheme.dark().copyWith(
           primary: Colors.blue,
@@ -39,8 +44,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  
 
   final String title;
 
@@ -64,11 +67,9 @@ class _MyHomePageState extends State<MyHomePage> {
         children: <Widget>[
           _buildTitle('Train openings', Icons.school),
           _buildTitle('Play openings', Icons.play_arrow),
-          
           _buildTitle('Openings score', Icons.check_circle_outline_rounded),
-
           _buildTitle('Play game', Icons.gamepad),
-          
+          _buildTitle('Friends', Icons.people),
         ],
       ),
     );
@@ -78,13 +79,22 @@ class _MyHomePageState extends State<MyHomePage> {
     return InkWell(
       onTap: () {
         if (title == 'Train openings') {
-          var push = Navigator.push(context, MaterialPageRoute(builder: (context) => const OpeningsPage()));
+          var push = Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const OpeningsPage()));
         } else if (title == 'Play openings') {
-          var push = Navigator.push(context, MaterialPageRoute(builder: (context) => const PlayOpenings()));
+          var push = Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const PlayOpenings()));
         } else if (title == 'Openings score') {
-          var push = Navigator.push(context, MaterialPageRoute(builder: (context) => const CountingScoreOpenings()));
+          var push = Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const CountingScoreOpenings()));
         } else if (title == 'Play game') {
-          var push = Navigator.push(context, MaterialPageRoute(builder: (context) => const GameBoard()));
+          var push = Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const GameBoard()));
+        } else if (title == 'Friends') {
+          var push = Navigator.push(context,
+              MaterialPageRoute(builder: (context) => const FriendsPage()));
         }
         print('$title tapped!');
       },

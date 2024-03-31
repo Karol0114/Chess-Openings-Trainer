@@ -7,6 +7,7 @@ import 'package:chess_openings_trainer/reset_password.dart';
 import 'package:chess_openings_trainer/signup_page.dart';
 //import 'package:firebase_signin/utils/color_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({Key? key}) : super(key: key);
@@ -18,6 +19,8 @@ class SignInScreen extends StatefulWidget {
 class _SignInScreenState extends State<SignInScreen> {
   TextEditingController _passwordTextController = TextEditingController();
   TextEditingController _emailTextController = TextEditingController();
+  bool isRememberMe = false; // tu dodałem
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -43,6 +46,16 @@ class _SignInScreenState extends State<SignInScreen> {
                 const SizedBox(
                   height: 5,
                 ),
+                CheckboxListTile(
+                  title: const Text('Remember me'),
+                  value: isRememberMe,
+                  onChanged: (bool? value) {
+                    setState(() {
+                      isRememberMe = value ?? false;
+                    });
+                  },
+                  controlAffinity: ListTileControlAffinity.leading,
+                ),
                 forgetPassword(context),
                 firebaseUIButton(context, "Sign In", () {
                   FirebaseAuth.instance
@@ -54,7 +67,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         context,
                         MaterialPageRoute(
                             builder: (context) => MyHomePage(
-                                  title: "nwm test",
+                                  title: "Chess Openings Trainer",
                                 )));
                   }).onError((error, stackTrace) {
                     print("Error ${error.toString()}");

@@ -10,11 +10,17 @@ class PlayOpenings extends StatelessWidget {
         title: const Text('Choose opening to play'),
       ),
       body: ListView(
-        children:  <Widget>[
-          
+        children: <Widget>[
           _buildExpansionTile(
             title: 'French Defense',
-            variants: ['The Classical Variation', 'The Advance Variation', 'The Steinitz Variation', 'The Winawer Variation', 'The Tarrasch Variation', 'The Greek Gift'],
+            variants: [
+              'The Classical Variation',
+              'The Advance Variation',
+              'The Steinitz Variation',
+              'The Winawer Variation',
+              'The Tarrasch Variation',
+              'The Greek Gift'
+            ],
           ),
           _buildExpansionTile(
             title: 'Italian Game',
@@ -41,33 +47,34 @@ class PlayOpenings extends StatelessWidget {
     );
   }
 
-  Widget _buildExpansionTile({required String title, required List<String> variants}){
+  Widget _buildExpansionTile(
+      {required String title, required List<String> variants}) {
     return Theme(
-      data: ThemeData(
-        unselectedWidgetColor: Colors.white,
-        textTheme: TextTheme(
-          subtitle1: TextStyle(color: Colors.white),
+        data: ThemeData(
+          unselectedWidgetColor: Colors.white,
+          textTheme: TextTheme(
+            subtitle1: TextStyle(color: Colors.white),
+          ),
+          expansionTileTheme: ExpansionTileThemeData(
+            iconColor: Colors.white,
+            collapsedIconColor: Colors.white,
+          ),
         ),
-        expansionTileTheme: ExpansionTileThemeData(
-          iconColor: Colors.white,
-          collapsedIconColor: Colors.white,
-        ),
-      ),
-      child: ExpansionTile(
-        title: Text(
-          title,
-          style: const TextStyle(color: Colors.white),
-        ),
-        children: variants.map((variant) => ListTile(
-          title: Padding(
-            padding: const EdgeInsets.only(left: 48.0),
-            child: Text(
-              variant,
+        child: ExpansionTile(
+            title: Text(
+              title,
               style: const TextStyle(color: Colors.white),
             ),
-          ),
-        )).toList()
-        )
-    );
+            children: variants
+                .map((variant) => ListTile(
+                      title: Padding(
+                        padding: const EdgeInsets.only(left: 48.0),
+                        child: Text(
+                          variant,
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ))
+                .toList()));
   }
 }
