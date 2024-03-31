@@ -3,12 +3,14 @@ import 'package:chess_openings_trainer/signin_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:chess_openings_trainer/play_openings.dart';
-import 'package:chess_openings_trainer/learn_openings_page.dart';
+//import 'package:chess_openings_trainer/learn_openings_page.dart';
 import 'package:chess_openings_trainer/openings_score_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(apiKey: "AIzaSyBuR58C-Uj32pOvbhXhdTPHknK1c5I5BUg", appId: "1:332377044451:android:852b3ea41d0c5f14311cd6", messagingSenderId: "332377044451", projectId: "chess-openings-trainer-ai")
+  );
   runApp(const MyApp());
 }
 

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "332377044451",
+    "project_id": "chess-openings-trainer-ai",
+    "storage_bucket": "chess-openings-trainer-ai.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332377044451:android:852b3ea41d0c5f14311cd6",
+        "android_client_info": {
+          "package_name": "com.example.chess_openings_trainer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBuR58C-Uj32pOvbhXhdTPHknK1c5I5BUg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

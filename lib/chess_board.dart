@@ -1,8 +1,10 @@
+import 'package:chess_openings_trainer/compontents/dead_piece.dart';
 import 'package:chess_openings_trainer/compontents/piece.dart';
 import 'package:chess_openings_trainer/helper/helper_methods.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter/rendering.dart';
 import 'package:chess_openings_trainer/compontents/square.dart';
+import 'package:flutter/widgets.dart';
 
 class GameBoard extends StatefulWidget {
   
@@ -26,6 +28,69 @@ class _GameBoardState extends State<GameBoard> {
   int selectedRow = -1;
   // Wartość kolumny, wybranego przez uzytkonwika. Domyslnie, jest wartość -1, która oznacza, że żadna figura nie została wybrana
   int selectedCol = -1;
+
+
+  // Lista możliwych ruchów
+
+  List<List<int>> validMoves = [];
+
+
+  // Lisa białych figur, które zostały zbite przez czarnego użytkownika
+  List<ChessPiece> whitePiecesTaken = [];
+
+  // Lisa czarnych figur, które zostały zbite przez białego użytkownika
+  List<ChessPiece> blackPiecesTaken = [];
+
+  // Identyfikacja, czyj jest teraz ruch, zmienną ustalamy na true, ponieważ białe zaczynają
+
+  bool isWhiteTurn = true;
+
+
+  // inicjalizacja pozycji królów (sledzenia pozycji, ułatwi sprawdzenie czy król jest szachowany)
+
+  List <int> whiteKingPosition = [7,4];
+  List <int> blackKingPosition = [0,4];
+
+  bool checkStatus = false;
+
+  // Obliczanie prawdziwych legalnych ruchów, odnosi sie do sytuacji, gdy krol jest szachowany
+
+  List<List<int>> calculateRealValidMoves(int row, int col, ChessPiece? piece, bool checkSimulation) {
+    List<List<int>> realValidMoves = [];
+    List<List<int>> candidateMoves = calculateRawValidMoves(row, col, piece);
+
+
+    if (checkSimulation) {
+      for (var move in candidateMoves) {
+        int endRow = move[0];
+        int endCol = move[1];
+
+        if (simulatedMoveIsIafe(piece!, row,col,endRow,endCol)) {
+          realValidMoves.add(move);
+        }
+      }
+    } else {
+      realValidMoves = candidateMoves;
+    }
+
+    return realValidMoves;
+
+  }
+
+
+
+  // Implementacja roszady
+
+  bool whiteKingMoved = false;
+  bool whiteRookKingSideMoved = false;
+  bool whiteRookQueenSideMoved = false;
+
+  bool blackKingMoved = false;
+  bool blackRookKingSideMoved = false;
+  bool blackRookQueenSideMoved = false;
+
+
+
   @override 
   void initState() {
     super.initState();
@@ -75,51 +140,531 @@ class _GameBoardState extends State<GameBoard> {
 
 void pieceSelected(int row, int col) {
   setState(() {
-     // Jeżeli na wybranym polu przez użytkownika jest figura to ją zaznaczamy
 
-     if(board[row][col] != null) {
+     // Jeżeli, żadna figura nie była zaznaczona, to będzie to pierwzym zaznaczeniem
+
+     if(selectedPiece == null && board[row][col] != null) {
+      if(board[row][col]!.isWhite == isWhiteTurn) {
+        selectedPiece = board[row][col];
+        selectedRow = row;
+        selectedCol = col;
+      }
+     }
+
+     // jeżeli figura jest zaznaczna, to użytkowenik może wybrać figure inną, aby zbić figurę, obecnie zaznaczoną figurą
+
+     else if(board[row][col] != null && board[row][col]!.isWhite == selectedPiece!.isWhite ) {
       selectedPiece = board[row][col];
       selectedRow = row;
       selectedCol = col;
      }
+
+     // jeżeli figura została wybrana, oraz uzytkownik wybral legalne posunięcie, to posun tam figure
+
+     else if (selectedPiece != null && validMoves.any((element) => element[0] == row && element[1] == col)) {
+      movePiece(row, col);
+     }
+
+     // jezeli figura została zaznaczona, oblicz jej mozliwe posunięcia
+
+     validMoves = calculateRealValidMoves(selectedRow, selectedCol, selectedPiece, true);
   });
 }
+
+  // Obliczenie możliwych ruchów, dla poszczególnych figur
+
+  List<List<int>> calculateRawValidMoves(int row, int col, ChessPiece? piece){
+    List<List<int>> candidateMoves = [];
+
+    if (piece == null) {
+      return [];
+    }
+    // Różnica kierunku, bazując na jej kolorze
+    
+    int direction = piece.isWhite ? -1: 1;
+
+    switch (piece.type) {
+      case ChessPieceType.pawn:
+        // Pionki poruszają sie tylko do przodu, jeżeli pole nie jest zajęte
+        if (isInBoard(row + direction, col) && board[row + direction][col] == null) {
+          candidateMoves.add([row + direction, col]);
+        }
+        // Pionki moga sie poruszać o 2 pola do przodu, jeżeli sa na startowej pozycji
+        if ((row == 1 && !piece.isWhite) || (row == 6 && piece.isWhite)) {
+          if (isInBoard(row + 2 * direction, col) && board[row + 2 * direction][col] == null && board[row + direction][col] == null) {
+            candidateMoves.add([row + 2 * direction, col]);
+          }
+        }
+        // Pionki biją po przekątnej
+
+        if(isInBoard(row + direction, col - 1) && board[row + direction][col - 1] != null && board[row + direction][col - 1] !.isWhite != piece.isWhite) {
+          candidateMoves.add([row + direction, col - 1]);
+        }
+        if(isInBoard(row + direction, col + 1) && board[row + direction][col + 1] != null && board[row + direction][col + 1] !.isWhite != piece.isWhite) {
+          candidateMoves.add([row + direction, col + 1]);
+        }
+        break;
+      case ChessPieceType.rook:
+
+        var directions = [
+          [-1,0], // góra
+          [1,0], // dół
+          [0,-1], // lewo
+          [0,1], //prawo
+        ];
+
+        for (var direction in directions) {
+          var i = 1;
+
+          while (true) {
+            var newRow = row + i * direction[0];
+            var newCol = col + i * direction[1];
+
+            if (!isInBoard(newRow, newCol)) {
+              break;
+            }
+
+            if (board[newRow][newCol] != null) {
+              if(board[newRow][newCol]!.isWhite != piece.isWhite) {
+                candidateMoves.add([newRow, newCol]);
+              }
+              break;
+            }
+            candidateMoves.add([newRow, newCol]);
+            i++;
+          }
+        }
+        break;
+      case ChessPieceType.knight:
+        // Ruchy konia, przypominają literę L, isntieje 8 możliwości
+        
+        var knightMoves = [
+          [-2,-1], // dwa do góry, jeden w lewo
+          [-2,1], //dwa do góry, jeden w prawo
+          [-1,-2], // jeden do góry, dwa w lewo
+          [-1,2], //jeden do góry, dwa w prawo
+          [1, -2], // jeden w dół, dwa w lewo
+          [1,2], // jeden w dół, dwa w prawo
+          [2, -1], // dwa w dół jeden w lewo
+          [2, 1], // dwa w dół, jeden w prawo
+
+        ];
+
+        for (var move in knightMoves) {
+          var newRow = row + move[0];
+          var newCol = col + move[1];
+          if (!isInBoard(newRow, newCol)) {
+            continue;
+          }
+
+          if (board[newRow][newCol] != null) {
+            if (board[newRow][newCol]!.isWhite != piece.isWhite) {
+              candidateMoves.add([newRow, newCol]);
+            }
+            continue;
+          }
+          candidateMoves.add([newRow, newCol]);
+        }
+        break;
+      case ChessPieceType.bishop:
+      // Gońce poruszają sie po przekątnych
+
+      var directions = [
+        [-1,-1], //gora lewo
+        [-1, 1], // góra prawo
+        [1,-1], // dół lewo
+        [1,1], //dół prawo
+      ];
+
+      for (var direction in directions) {
+        var i = 1;
+        while (true) {
+          var newRow = row + i * direction[0];
+          var newCol = col + i * direction[1];
+
+          if (!isInBoard(newRow, newCol)) {
+            break;
+          }
+
+          if (board[newRow][newCol] != null) {
+            if (board[newRow][newCol]!.isWhite != piece.isWhite) {
+              candidateMoves.add([newRow, newCol]);
+            }
+            break;
+          }
+          candidateMoves.add([newRow, newCol]);
+          i++;
+        }
+      }
+        break;
+      case ChessPieceType.queen:
+        // królowa porusza się po 8 polach w górę, dół, lewo, prawo, i po 4 przekątnych
+
+        var directions = [
+          [-1,0], // gora
+          [1,0], // dół
+          [0,-1], // lewo
+          [0,1], // prawo
+          [-1,-1], // góra lewo
+          [-1,1], // góra prawo
+          [1,-1], // dół lewo
+          [1,1], // dół prawo
+        ];
+
+        for (var direction in directions) {
+          var i = 1;
+          while (true) {
+            var newRow = row + i * direction[0];
+            var newCol = col + i * direction[1];
+            if (!isInBoard(newRow, newCol)) {
+              break;
+            }
+            if (board[newRow][newCol] != null) {
+              if (board[newRow][newCol]!.isWhite != piece.isWhite) {
+                candidateMoves.add([newRow,newCol]);
+              }
+              break;
+            }
+            candidateMoves.add([newRow, newCol]);
+            i++;
+          }
+        }
+        break;
+      case ChessPieceType.king:
+      // król porusza się tak samo jak królowa, tylko jedno o jedno pole w kazdym kierunku
+        var directions = [
+          [-1,0], // gora
+          [1,0], // dół
+          [0,-1], // lewo
+          [0,1], // prawo
+          [-1,-1], // góra lewo
+          [-1,1], // góra prawo
+          [1,-1], // dół lewo
+          [1,1], // dół prawo
+        ];
+
+        for (var direction in directions) {
+          var newRow = row + direction[0];
+          var newCol = col + direction[1];
+
+          if (!isInBoard(newRow, newCol)) {
+            continue;
+          }
+
+          if (board[newRow][newCol] != null) {
+            if(board[newRow][newCol]!.isWhite != piece.isWhite) {
+              candidateMoves.add([newRow, newCol]);
+            }
+
+            continue;
+          }
+          candidateMoves.add([newRow, newCol]);
+        }
+        break;
+      default:
+
+    }
+    
+    return candidateMoves;
+  }
+
+  // RUSZ FIGURĘ
+
+  void movePiece(int newRow, int newCol) {
+
+    // Sytuacja w której nowym miejscem figury, jest miejsce na ktrej znajduje się czarna figura:
+    if(board[newRow][newCol] != null) {
+      //dodaj zbitą figurę do odpowiedniej listy
+      var capturedPiece = board[newRow][newCol];
+
+      if (capturedPiece!.isWhite) {
+        whitePiecesTaken.add(capturedPiece);
+      } else {
+        blackPiecesTaken.add(capturedPiece);
+      }
+
+    }
+    // Po ruszeniu figurą wyczyszczenie starego jej miesjca
+    board[newRow][newCol] = selectedPiece;
+    board[selectedRow][selectedCol] = null;
+
+    // Sprawdzenie czy króle są pod atakiem
+    if (isKingInCheck(!isWhiteTurn)) {
+      checkStatus = true;
+     } else {
+      checkStatus = false;
+     }
+
+    if (selectedPiece!.type == ChessPieceType.king) {
+      // Jeśli ruch wykonuje król, to aktualizujemy flagi ruchu dla króla i wież
+      if (selectedPiece!.isWhite) {
+        whiteKingMoved = true;
+        // Jeśli to roszada, zaktualizuj również pozycję wiezy
+        if (selectedCol == 4 && newRow == 7) {
+          if(newCol == 6) {
+            board[7][5] = board[7][7];
+            board[7][7] = null;
+            whiteRookKingSideMoved = true;
+          } else if (newCol == 2) {
+            board[7][3] = board[7][0];
+            board[7][0] = null;
+            whiteRookQueenSideMoved = true;
+          }
+        }
+
+      } else {
+        blackKingMoved = true;
+        // Jeśli to roszada, zaktualizuj równiez pozycję wieży
+
+        if (selectedCol == 4 && newRow == 0) {
+          if (newCol == 6) {
+            board[0][5] = board[0][7];
+            board[0][7] = null;
+            blackRookKingSideMoved = true;
+          } else if (newCol == 2) {
+            board[0][3] = board[0][0];
+            board[0][0] = null;
+            blackRookQueenSideMoved = true;
+          }
+        }
+      }
+    }
+     
+     if(selectedPiece!.type == ChessPieceType.king) {
+      if(selectedPiece!.isWhite) {
+        whiteKingPosition = [newRow, newCol];
+      } else {
+        blackKingPosition = [newRow, newCol];
+      }
+     }
+
+     // Jeżeli ruch wykonuje wieża, aktualizujemy flagi ruchu dla wieży
+
+     if (selectedPiece!.type == ChessPieceType.rook) {
+      if (selectedPiece!.isWhite) {
+        if(selectedRow == 7 && selectedCol == 0) whiteRookQueenSideMoved = true;
+        if (selectedRow == 7 && selectedCol == 7) whiteRookKingSideMoved = true;
+      } else {
+        if(selectedRow == 0 && selectedCol == 0) blackRookKingSideMoved = true;
+        if(selectedRow == 0 && selectedCol == 7) blackRookKingSideMoved = true;
+
+      }
+     }
+
+     
+
+
+    // Usunięcie wybrania tej figury
+    setState(() {
+      selectedPiece = null;
+      selectedRow = -1;
+      selectedCol = -1;
+      validMoves = [];
+    });
+
+    if (isCheckMate(!isWhiteTurn)) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text("CHECK MATE!"),
+          actions: [
+            TextButton(onPressed: resetGame, child: const Text("Play again"),),
+          ],
+        ),
+      );
+    }
+
+    // Zmiana kolejki, czyli po wykonwnaiu ruchu białych, ruch moga wykonac tylko czarne
+
+    isWhiteTurn = !isWhiteTurn;
+  }
+
+    // Sprawdzenie czy król jest szachowany
+
+    bool isKingInCheck(bool isWhiteKing) {
+      // zdobycie pozycji króla
+      List<int> kingPosition = isWhiteKing ? whiteKingPosition : blackKingPosition;
+
+      //sprawdzenie czy przeciwna figura atakuje króla
+
+      for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+          ChessPiece? oposingPiece = board[i][j];
+          if(oposingPiece == null || oposingPiece.isWhite == isWhiteKing) {
+            continue;
+          }
+
+          List<List<int>> pieceValidMoves = calculateRawValidMoves(i, j, oposingPiece);
+
+          if (pieceValidMoves.any((move) => move[0] == kingPosition[0] && move[1] == kingPosition[1])) {
+            return true;
+
+          
+          }
+        }
+    }
+
+    return false;
+  }
+
+
+  bool simulatedMoveIsIafe(ChessPiece piece, int startRow, int startCol, int endRow, int endCol) {
+
+    ChessPiece? originalDestinationPiece = board[endRow][endCol];
+
+
+    List<int>? originalKingPosition;
+
+    if(piece.type == ChessPieceType.king) {
+      originalKingPosition = piece.isWhite ? whiteKingPosition : blackKingPosition;
+
+      if(piece.isWhite) {
+        whiteKingPosition = [endRow, endCol];
+      } else {
+        blackKingPosition = [endRow, endCol];
+      }
+    }
+
+    board[endRow][endCol] = piece;
+    board[startRow][startCol] = null;
+
+
+    bool kingInCheck = isKingInCheck(piece.isWhite);
+
+    board[startRow][startCol] = piece;
+    board[endRow][endCol] = originalDestinationPiece;
+
+    if (piece.type == ChessPieceType.king) {
+      if(piece.isWhite) {
+        whiteKingPosition = [startRow, startCol];
+      } else {
+        blackKingPosition = [startRow, startCol];
+      }
+    }
+
+    return !kingInCheck;
+  }
+
+  // SZACH MAT
+
+  bool isCheckMate(bool isWhiteKing) {
+
+    if (!isKingInCheck(isWhiteKing)) {
+      return false;
+    }
+
+    for (int i = 0; i < 8; i++) {
+      for (int j = 0; j < 8; j++) {
+
+        if(board[i][j] == null || board[i][j]!.isWhite != isWhiteKing) {
+          continue;
+        }
+
+        List<List<int>> pieceValidMoves = calculateRealValidMoves(i, j, board[i][j], true);
+
+        if (pieceValidMoves.isNotEmpty) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  // Rest do nowej gry
+
+  void resetGame() {
+    Navigator.pop(context);
+    _initializeBoard();
+    checkStatus = false;
+    whitePiecesTaken.clear();
+    blackPiecesTaken.clear();
+    whiteKingPosition = [7, 4];
+    blackKingPosition = [0, 4];
+
+    setState(() {
+      
+    });
+
+  }
 
   @override 
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
+      //body: Center(
         // Centrujemy planszę na ekranie
-        child: AspectRatio(
-          aspectRatio: 1, // Zachowaj proporcje 1:1
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.5, // Plansza zajmuje 50% szerokości ekranu
-            height: MediaQuery.of(context).size.width * 0.5, // Opcjonalnie, jeśli chcesz ustawić wysokość
+        //child: AspectRatio(
+          //aspectRatio: 1, // Zachowaj proporcje 1:1
           
-            child: GridView.builder(
-              itemCount: 8 * 8,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: 
-                  const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8),
-              itemBuilder: (context, index) {
+          
+        body: Column(
+          children: [
 
-                int row = index ~/ 8;
-                int col = index % 8;
-
-                bool isSelected = selectedRow == row && selectedCol == col;
-
-
-                return Square(
-                  isWhite: isWhite(index),
-                  piece: board[row][col],
-                  isSelected: isSelected,
-                  onTap: () => pieceSelected(row, col),
-                );
-              },
+            // Zbite białe pionki
+            Expanded(
+              child: GridView.builder(
+                itemCount: whitePiecesTaken.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8), 
+                itemBuilder: (context, index) => DeadPiece(
+                  isWhite: true,
+                  imagePath: whitePiecesTaken[index].imagePath,
+                ),
+                ),
             ),
-          ),
+
+            // Status gry
+
+            Text(checkStatus ? "CHECK!" : ""),
+
+            // Szachowa plansza
+            Expanded(
+              flex: 3,
+              child: GridView.builder(
+                itemCount: 8 * 8,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: 
+                    const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8),
+                itemBuilder: (context, index) {
+              
+                  int row = index ~/ 8;
+                  int col = index % 8;
+              
+                  bool isSelected = selectedRow == row && selectedCol == col;
+              
+                    // sprawdzenie, czy pole, które chce wybrac uzytkownik jest prawdiłowe
+              
+                  bool isValidMove = false;
+                  for (var position in validMoves){
+                    if (position[0] == row && position[1] == col) {
+                      isValidMove = true;
+                    }
+                  }
+              
+                  return Square(
+                    isWhite: isWhite(index),
+                    piece: board[row][col],
+                    isSelected: isSelected,
+                    isValidMove: isValidMove,
+                    onTap: () => pieceSelected(row, col),
+                  );
+                  },
+                ),
+            ),
+
+              // Zbite czarne pionki
+              Expanded(
+              child: GridView.builder(
+                itemCount: blackPiecesTaken.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 8), 
+                itemBuilder: (context, index) => DeadPiece(
+                  isWhite: false,
+                  imagePath: blackPiecesTaken[index].imagePath,
+                ),
+                ),
+            ),
+          ],
         ),
-      ),
-    );
-  }   
+        );
+      //),
+    //);
+  }
 }

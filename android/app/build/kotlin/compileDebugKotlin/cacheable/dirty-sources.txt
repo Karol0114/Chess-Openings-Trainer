@@ -1,0 +1,1 @@
+C:\Users\ja\Desktop\chess_openings_trainer\Chess-Openings-Trainer\android\app\src\main\kotlin\com\example\chess_openings_trainer\MainActivity.kt
