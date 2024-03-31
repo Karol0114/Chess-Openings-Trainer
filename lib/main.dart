@@ -1,3 +1,4 @@
+import 'package:chess_openings_trainer/chess_board.dart';
 import 'package:chess_openings_trainer/learn_openings_page.dart';
 import 'package:chess_openings_trainer/signin_page.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -65,6 +66,8 @@ class _MyHomePageState extends State<MyHomePage> {
           _buildTitle('Play openings', Icons.play_arrow),
           
           _buildTitle('Openings score', Icons.check_circle_outline_rounded),
+
+          _buildTitle('Play game', Icons.gamepad),
           
         ],
       ),
@@ -80,6 +83,8 @@ class _MyHomePageState extends State<MyHomePage> {
           var push = Navigator.push(context, MaterialPageRoute(builder: (context) => const PlayOpenings()));
         } else if (title == 'Openings score') {
           var push = Navigator.push(context, MaterialPageRoute(builder: (context) => const CountingScoreOpenings()));
+        } else if (title == 'Play game') {
+          var push = Navigator.push(context, MaterialPageRoute(builder: (context) => const GameBoard()));
         }
         print('$title tapped!');
       },
