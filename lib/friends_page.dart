@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:chess_openings_trainer/compontents/text_field.dart';
+import 'package:intl/intl.dart';
 
 class FriendsPage extends StatefulWidget {
   const FriendsPage({Key? key}) : super(key: key);
@@ -45,8 +46,35 @@ class _FriendsPageState extends State<FriendsPage> {
         'UserEmail': currentUser.email,
         'Message': textController.text,
         'TimeStamp': Timestamp.now(),
+        'Likes': [],
       });
     }
+
+    //clear after send
+    setState(() {
+      textController.clear();
+    });
+  }
+
+  void onLikeTap(String postId, bool isLiked) {
+    DocumentReference postRef =
+        FirebaseFirestore.instance.collection("User Posts").doc(postId);
+
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      DocumentSnapshot postSnapshot = await transaction.get(postRef);
+      if (!postSnapshot.exists) {
+        throw Exception("post does not exist");
+      }
+      if (isLiked) {
+        transaction.update(postRef, {
+          'Likes': FieldValue.arrayUnion([currentUser.uid])
+        });
+      } else {
+        transaction.update(postRef, {
+          'Likes': FieldValue.arrayRemove([currentUser.uid])
+        });
+      }
+    });
   }
 
   Widget build(BuildContext context) {
@@ -67,17 +95,39 @@ class _FriendsPageState extends State<FriendsPage> {
                         descending: false,
                       )
                       .snapshots(),
-                  builder: (context, snapshot) {
+                  builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.hasData) {
                       return ListView.builder(
                         itemCount: snapshot.data!.docs.length,
                         itemBuilder: (context, index) {
+                          DocumentSnapshot documentSnapshot =
+                              snapshot.data!.docs[index];
+                          Map<String, dynamic> post =
+                              documentSnapshot.data() as Map<String, dynamic>;
+                          String postId = documentSnapshot.id;
                           //get the message
-                          final post = snapshot.data!.docs[index];
+                          // final post = snapshot.data!.docs[index].data()
+                          //     as Map<String, dynamic>;
+
+                          //Formatowanie Timestamp na czytelny format daty i czasu
+                          final DateTime postTime =
+                              (post['TimeStamp'] as Timestamp).toDate();
+                          final String formattedTime =
+                              DateFormat('yyyy-MM-dd - kk:mm').format(postTime);
+                          List<String> likes =
+                              List<String>.from(post['Likes'] ?? []);
+                          bool isCurrentPostLiked =
+                              likes.contains(currentUser.uid);
                           return WallPost(
                               message: post['Message'],
                               user: post['UserEmail'],
-                              time: post['Time']);
+                              time: formattedTime,
+                              postId: postId,
+                              likes: likes,
+                              isLiked: isCurrentPostLiked,
+                              onLikeTap: (bool isLiked) {
+                                onLikeTap(postId, isLiked);
+                              });
                         },
                       );
                     } else if (snapshot.hasError) {
@@ -112,7 +162,14 @@ class _FriendsPageState extends State<FriendsPage> {
                   ],
                 ),
               ),
-              Text("Logged in as: " + (username ?? 'Loading...')),
+              Text(
+                "Logged in as: " + (currentUser.email!),
+                style: TextStyle(color: Colors.grey),
+              ),
+
+              const SizedBox(
+                height: 50,
+              )
             ],
           ),
         ));
