@@ -22,6 +22,38 @@ class _SignInScreenState extends State<SignInScreen> {
   bool isRememberMe = false; // tu dodałem
 
   @override
+  void initState() {
+    super.initState();
+    _loadUserEmailAndPassword(); //load saved email and password
+  }
+
+  void _loadUserEmailAndPassword() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _emailTextController.text = (prefs.getString('email') ?? '');
+      _passwordTextController.text = (prefs.getString('password') ?? '');
+      isRememberMe = (prefs.getBool('isRememberMe') ?? false);
+    });
+  }
+
+  Future<void> _saveUserEmailAndPassword() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (isRememberMe) {
+      await prefs.setString('email', _emailTextController.text);
+      await prefs.setString('password', _passwordTextController.text);
+      await prefs.setBool('isRememberMe', isRememberMe);
+    } else {
+      await prefs.remove('email');
+      await prefs.remove('password');
+      await prefs.remove('isRememberMe');
+    }
+  }
+
+  void _signIn() async {
+    await _saveUserEmailAndPassword();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
@@ -57,21 +89,29 @@ class _SignInScreenState extends State<SignInScreen> {
                   controlAffinity: ListTileControlAffinity.leading,
                 ),
                 forgetPassword(context),
-                firebaseUIButton(context, "Sign In", () {
-                  FirebaseAuth.instance
-                      .signInWithEmailAndPassword(
-                          email: _emailTextController.text,
-                          password: _passwordTextController.text)
-                      .then((value) {
+                firebaseUIButton(context, "Sign In", () async {
+                  try {
+                    //proba logowania
+                    await FirebaseAuth.instance.signInWithEmailAndPassword(
+                      email: _emailTextController.text,
+                      password: _passwordTextController.text,
+                    );
+
+                    if (isRememberMe) {
+                      await _saveUserEmailAndPassword();
+                    } else {
+                      await _clearSavedUserEmailAndPassword();
+                    }
+
                     Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => MyHomePage(
-                                  title: "Chess Openings Trainer",
-                                )));
-                  }).onError((error, stackTrace) {
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) =>
+                              MyHomePage(title: "Chess Openings Trainer")),
+                    );
+                  } catch (error, stackTrace) {
                     print("Error ${error.toString()}");
-                  });
+                  }
                 }),
                 signUpOption()
               ],
@@ -100,6 +140,21 @@ class _SignInScreenState extends State<SignInScreen> {
         )
       ],
     );
+  }
+
+  Future<void> _signOut() async {
+    await FirebaseAuth.instance.signOut();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('email');
+    await prefs.remove('password');
+    await prefs.remove('isRememberMe');
+  }
+
+  Future<void> _clearSavedUserEmailAndPassword() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('email');
+    await prefs.remove('password');
+    await prefs.remove('isRememberMe');
   }
 
   Widget forgetPassword(BuildContext context) {

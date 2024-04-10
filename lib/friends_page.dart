@@ -12,6 +12,9 @@ class FriendsPage extends StatefulWidget {
 }
 
 class _FriendsPageState extends State<FriendsPage> {
+  //scroll messages to newest
+  final ScrollController _scrollController = ScrollController();
+
   //user
   final currentUser = FirebaseAuth.instance.currentUser!;
 
@@ -25,6 +28,22 @@ class _FriendsPageState extends State<FriendsPage> {
   void initState() {
     super.initState();
     _fetchUsername();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   void _fetchUsername() async {
@@ -97,7 +116,10 @@ class _FriendsPageState extends State<FriendsPage> {
                       .snapshots(),
                   builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                     if (snapshot.hasData) {
+                      WidgetsBinding.instance
+                          .addPostFrameCallback((_) => _scrollToBottom());
                       return ListView.builder(
+                        controller: _scrollController,
                         itemCount: snapshot.data!.docs.length,
                         itemBuilder: (context, index) {
                           DocumentSnapshot documentSnapshot =

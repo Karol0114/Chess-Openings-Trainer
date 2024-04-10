@@ -5,6 +5,7 @@ import 'package:chess_openings_trainer/signin_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'friends_page.dart';
+import 'profile_page.dart';
 import 'package:chess_openings_trainer/play_openings.dart';
 //import 'package:chess_openings_trainer/learn_openings_page.dart';
 import 'package:chess_openings_trainer/openings_score_page.dart';
@@ -58,6 +59,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        automaticallyImplyLeading: false,
       ),
       body: GridView.count(
         crossAxisCount: 2,
@@ -70,6 +72,7 @@ class _MyHomePageState extends State<MyHomePage> {
           _buildTitle('Openings score', Icons.check_circle_outline_rounded),
           _buildTitle('Play game', Icons.gamepad),
           _buildTitle('Friends', Icons.people),
+          _buildTitle('Profile', Icons.person_4)
         ],
       ),
     );
@@ -95,6 +98,9 @@ class _MyHomePageState extends State<MyHomePage> {
         } else if (title == 'Friends') {
           var push = Navigator.push(context,
               MaterialPageRoute(builder: (context) => const FriendsPage()));
+        } else if (title == 'Profile') {
+          var push = Navigator.push(
+              context, MaterialPageRoute(builder: (context) => ProfilePage()));
         }
         print('$title tapped!');
       },
