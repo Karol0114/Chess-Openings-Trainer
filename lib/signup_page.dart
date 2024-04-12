@@ -1,4 +1,5 @@
 import 'package:chess_openings_trainer/reusable_widget.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:chess_openings_trainer/home_page.dart';
 //import 'package:firebase_signin/utils/color_utils.dart';
@@ -28,10 +29,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
       ),
       body: Container(
-          width: MediaQuery.of(context).size.width,
-          height: MediaQuery.of(context).size.height,
-          child: SingleChildScrollView(
-              child: Padding(
+        width: MediaQuery.of(context).size.width,
+        height: MediaQuery.of(context).size.height,
+        child: SingleChildScrollView(
+          child: Padding(
             padding: EdgeInsets.fromLTRB(20, 120, 20, 0),
             child: Column(
               children: <Widget>[
@@ -53,22 +54,35 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(
                   height: 20,
                 ),
-                firebaseUIButton(context, "Sign Up", () {
-                  FirebaseAuth.instance
-                      .createUserWithEmailAndPassword(
-                          email: _emailTextController.text,
-                          password: _passwordTextController.text)
-                      .then((value) {
+                firebaseUIButton(context, "Sign Up", () async {
+                  try {
+                    UserCredential userCredential = await FirebaseAuth.instance
+                        .createUserWithEmailAndPassword(
+                      email: _emailTextController.text,
+                      password: _passwordTextController.text,
+                    );
+
+                    //Add user to the Firestore database
+                    await FirebaseFirestore.instance
+                        .collection("Users")
+                        .doc(userCredential.user!.email)
+                        .set({
+                      'username': _emailTextController.text.split('@')[0],
+                      'bio': 'Empty bio',
+                      //here you can add additional user info like below:
+                    });
                     print("Created New Account");
                     Navigator.push(context,
                         MaterialPageRoute(builder: (context) => HomeScreen()));
-                  }).onError((error, stackTrace) {
-                    print("Error ${error.toString()}");
-                  });
+                  } catch (e) {
+                    print("Error: ${e.toString()}");
+                  }
                 })
               ],
             ),
-          ))),
+          ),
+        ),
+      ),
     );
   }
 }
