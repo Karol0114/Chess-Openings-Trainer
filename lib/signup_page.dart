@@ -12,6 +12,14 @@ class SignUpScreen extends StatefulWidget {
   _SignUpScreenState createState() => _SignUpScreenState();
 }
 
+Future<bool> isUsernameUnique(String username) async {
+  final usernameResult = await FirebaseFirestore.instance
+      .collection('usernames')
+      .doc(username)
+      .get();
+  return !usernameResult.exists;
+}
+
 class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController _passwordTextController = TextEditingController();
   TextEditingController _emailTextController = TextEditingController();
@@ -55,27 +63,44 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   height: 20,
                 ),
                 firebaseUIButton(context, "Sign Up", () async {
-                  try {
-                    UserCredential userCredential = await FirebaseAuth.instance
-                        .createUserWithEmailAndPassword(
-                      email: _emailTextController.text,
-                      password: _passwordTextController.text,
-                    );
+                  String username = _userNameTextController.text;
+                  if (await isUsernameUnique(username)) {
+                    try {
+                      UserCredential userCredential = await FirebaseAuth
+                          .instance
+                          .createUserWithEmailAndPassword(
+                        email: _emailTextController.text,
+                        password: _passwordTextController.text,
+                      );
 
-                    //Add user to the Firestore database
-                    await FirebaseFirestore.instance
-                        .collection("Users")
-                        .doc(userCredential.user!.email)
-                        .set({
-                      'username': _emailTextController.text.split('@')[0],
-                      'bio': 'Empty bio',
-                      //here you can add additional user info like below:
-                    });
-                    print("Created New Account");
-                    Navigator.push(context,
-                        MaterialPageRoute(builder: (context) => HomeScreen()));
-                  } catch (e) {
-                    print("Error: ${e.toString()}");
+                      //Add user to the Firestore database
+                      await FirebaseFirestore.instance
+                          .collection("Users")
+                          .doc(userCredential.user!.uid)
+                          .set({
+                        'username': _userNameTextController.text,
+                        'bio': 'Empty bio',
+                        //here you can add additional user info like below:
+                      });
+                      await FirebaseFirestore.instance
+                          .collection('usernames')
+                          .doc(username)
+                          .set({
+                        'userId': userCredential.user!.uid,
+                      });
+
+                      print("Created New Account");
+
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => HomeScreen()));
+                    } catch (e) {
+                      print("Error: ${e.toString()}");
+                    }
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text("Username is already taken")));
                   }
                 })
               ],

@@ -15,7 +15,43 @@ class _ProfilePageState extends State<ProfilePage> {
   final currentUser = FirebaseAuth.instance.currentUser!;
 
   //edit field
-  Future<void> editField(String field) async {}
+  Future<void> editField(String field, String currentValue) async {
+    String newValue = currentValue;
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: Colors.grey[900],
+        title: Text("Edit " + field),
+        content: TextField(
+          onChanged: (value) {
+            newValue = value;
+          },
+          controller: TextEditingController(text: currentValue),
+          decoration: InputDecoration(hintText: "Enter new $field"),
+        ),
+        actions: <Widget>[
+          TextButton(
+            child: Text('Cancel'),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          TextButton(
+            child: Text('save'),
+            onPressed: () async {
+              Navigator.of(context).pop();
+              await FirebaseFirestore.instance
+                  .collection("Users")
+                  .doc(currentUser.uid)
+                  .update({field: newValue});
+              setState(() {});
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
   //method for logout
   void _signOut(BuildContext context) async {
@@ -34,7 +70,7 @@ class _ProfilePageState extends State<ProfilePage> {
       body: StreamBuilder<DocumentSnapshot>(
         stream: FirebaseFirestore.instance
             .collection("Users")
-            .doc(currentUser.email)
+            .doc(currentUser.uid)
             .snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -47,17 +83,9 @@ class _ProfilePageState extends State<ProfilePage> {
           Map<String, dynamic> userData =
               snapshot.data?.data() as Map<String, dynamic>? ??
                   {
-                    'username': 'default_username',
-                    'bio': 'empty bio',
+                    'username': 'Your username',
+                    'bio': 'Your bio',
                   };
-
-          // if (!snapshot.hasData && snapshot.data?.data() != null) {
-          //   // Możesz tutaj dodać ListView z domyślnymi wartościami lub inną treść
-          //   userData = snapshot.data!.data() as Map<String, dynamic>;
-          // }
-
-          //get user data
-          // final userData = snapshot.data!.data() as Map<String, dynamic>;
           return ListView(
             children: <Widget>[
               // profile pic
@@ -82,13 +110,16 @@ class _ProfilePageState extends State<ProfilePage> {
               MyTextBox(
                 text: userData['username'] ?? 'no username provided',
                 sectionName: 'username',
-                onPressed: () => editField('username'),
+                onPressed: () => editField(
+                    'username', userData['username'] ?? 'no username provided'),
+                showEditIcon: false,
               ),
               // bio
               MyTextBox(
                 text: userData['bio'] ?? 'no bio avaliable',
                 sectionName: 'bio',
-                onPressed: () => editField('bio'),
+                onPressed: () =>
+                    editField('bio', userData['bio'] ?? 'no bio avaliable'),
               ),
               const SizedBox(height: 50),
               // user posts
@@ -115,105 +146,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 }
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('Profile Page'),
-//         backgroundColor: Colors.grey[900],
-//       ),
-//       body: StreamBuilder<DocumentSnapshot>(
-//         stream: FirebaseFirestore.instance
-//             .collection("Users")
-//             .doc(currentUser.email)
-//             .snapshots(),
-//         builder: (context, snapshot) {
-//           if (snapshot.connectionState == ConnectionState.waiting) {
-//             return const Center(child: CircularProgressIndicator());
-//           }
-//           if (snapshot.hasError) {
-//             return Center(child: Text("Error: ${snapshot.error}"));
-//           }
-//           if (!snapshot.hasData || snapshot.data?.data() == null) {
-//           return ListView(
-//             children: <Widget>[
-//               //profile pic
-//               const SizedBox(
-//                 height: 50,
-//               ),
-//               const Icon(
-//                 Icons.person,
-//                 size: 72,
-//               ),
-//               const SizedBox(
-//                 height: 10,
-//               ),
-//               //user email
-//               Text(
-//                 currentUser.email!,
-//                 textAlign: TextAlign.center,
-//                 style: TextStyle(color: Colors.grey[700]),
-//               ),
-//               //user details
-//               Padding(
-//                 padding: const EdgeInsets.only(left: 25.0),
-//                 child: Text(
-//                   'My details',
-//                   style: TextStyle(color: Colors.grey[600]),
-
-//                 ),
-//               ),
-//             ],
-//           );}
-//                        //get user data
-//           final userData = snapshot.data!.data() as Map<String, dynamic>;
-//               return ListView(children: <Widget>[
-//               // username
-//               MyTextBox(
-//                 text: userData['username'],
-//                 sectionName: 'username',
-//                 onPressed: () => editField('username'),
-//               ),
-//               // bio
-//               MyTextBox(
-//                 text: userData['bio'],
-//                 sectionName: 'bio',
-//                 onPressed: () => editField('bio'),
-//               ),
-
-//               const SizedBox(
-//                 height: 50,
-//               ),
-
-//               // user posts
-//               Padding(
-//                 padding: const EdgeInsets.only(left: 25.0),
-//                 child: Text(
-//                   'My Posts',
-//                   style: TextStyle(color: Colors.grey[600]),
-//                 ),
-//               ),
-//               //button
-//               ElevatedButton(
-//                 onPressed: () => _signOut(context),
-//                 child: Text('Logout'),
-//                 style: ElevatedButton.styleFrom(
-//                   backgroundColor: Colors.red,
-//                   foregroundColor: Colors.white,
-//                 ),
-//               ),
-//             ],
-//           );
-//               ],)
-
-//           return const Center(
-//             child: CircularProgressIndicator(),
-//           );
-//         },
-//       ),
-//     );
-//   }
-// }
 
 void _signOut(BuildContext context) async {
   await FirebaseAuth.instance.signOut();
