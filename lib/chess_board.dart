@@ -71,7 +71,7 @@ class _GameBoardState extends State<GameBoard> {
       }
     } else {
       realValidMoves = candidateMoves;
-    }
+    } 
 
     return realValidMoves;
 
@@ -169,6 +169,15 @@ void pieceSelected(int row, int col) {
 
      validMoves = calculateRealValidMoves(selectedRow, selectedCol, selectedPiece, true);
   });
+}
+
+void promotePawn(int row, int col, bool isWhite) {
+  board[row][col] = ChessPiece(
+    type: ChessPieceType.queen,
+    isWhite: isWhite,
+    imagePath: isWhite ? 'lib/images/queen.png' : 'lib/images/queen.png',
+
+  );
 }
 
   // Obliczenie możliwych ruchów, dla poszczególnych figur
@@ -360,6 +369,16 @@ void pieceSelected(int row, int col) {
           }
           candidateMoves.add([newRow, newCol]);
         }
+        if ((!piece.isWhite && !blackKingMoved) || (piece.isWhite && !whiteKingMoved)) {
+          // Sprawdź, czy droga dla roszady krótkiej jest wolna
+          if (board[row][5] == null && board[row][6] == null) {
+            candidateMoves.add([row, 6]);  // Pozycja po roszadzie krótkiej
+          }
+          // Sprawdź, czy droga dla roszady długiej jest wolna
+          if (board[row][1] == null && board[row][2] == null && board[row][3] == null) {
+            candidateMoves.add([row, 2]);  // Pozycja po roszadzie długiej
+          }
+        }
         break;
       default:
 
@@ -391,67 +410,48 @@ void pieceSelected(int row, int col) {
     // Sprawdzenie czy króle są pod atakiem
     if (isKingInCheck(!isWhiteTurn)) {
       checkStatus = true;
-     } else {
+    } else {
       checkStatus = false;
-     }
+    }
 
     if (selectedPiece!.type == ChessPieceType.king) {
       // Jeśli ruch wykonuje król, to aktualizujemy flagi ruchu dla króla i wież
       if (selectedPiece!.isWhite) {
         whiteKingMoved = true;
         // Jeśli to roszada, zaktualizuj również pozycję wiezy
-        if (selectedCol == 4 && newRow == 7) {
-          if(newCol == 6) {
-            board[7][5] = board[7][7];
-            board[7][7] = null;
-            whiteRookKingSideMoved = true;
-          } else if (newCol == 2) {
-            board[7][3] = board[7][0];
-            board[7][0] = null;
-            whiteRookQueenSideMoved = true;
-          }
-        }
+        
 
       } else {
         blackKingMoved = true;
         // Jeśli to roszada, zaktualizuj równiez pozycję wieży
-
-        if (selectedCol == 4 && newRow == 0) {
-          if (newCol == 6) {
-            board[0][5] = board[0][7];
-            board[0][7] = null;
-            blackRookKingSideMoved = true;
-          } else if (newCol == 2) {
-            board[0][3] = board[0][0];
-            board[0][0] = null;
-            blackRookQueenSideMoved = true;
-          }
-        }
       }
     }
-     
-     if(selectedPiece!.type == ChessPieceType.king) {
-      if(selectedPiece!.isWhite) {
-        whiteKingPosition = [newRow, newCol];
-      } else {
-        blackKingPosition = [newRow, newCol];
+
+    if (selectedPiece!.type == ChessPieceType.pawn) {
+      if ((selectedPiece!.isWhite && newRow == 0) || (!selectedPiece!.isWhite && newRow == 7)) {
+        promotePawn(newRow, newCol, selectedPiece!.isWhite);
       }
-     }
+    }
 
-     // Jeżeli ruch wykonuje wieża, aktualizujemy flagi ruchu dla wieży
+    
 
-     if (selectedPiece!.type == ChessPieceType.rook) {
-      if (selectedPiece!.isWhite) {
-        if(selectedRow == 7 && selectedCol == 0) whiteRookQueenSideMoved = true;
-        if (selectedRow == 7 && selectedCol == 7) whiteRookKingSideMoved = true;
-      } else {
-        if(selectedRow == 0 && selectedCol == 0) blackRookKingSideMoved = true;
-        if(selectedRow == 0 && selectedCol == 7) blackRookKingSideMoved = true;
 
+    // Roszada
+    if (selectedPiece!.type == ChessPieceType.king) {
+
+      // Roszada krótka
+      if (newCol - selectedCol == 2) {
+        board[newRow][5] = board[newRow][7];  // Przenieś wieżę
+        board[newRow][7] = null;  // Usuń wieżę ze starej pozycji
       }
-     }
+      // Roszada długa
+      else if (selectedCol - newCol == 2) {
+        board[newRow][3] = board[newRow][0];  // Przenieś wieżę
+        board[newRow][0] = null;  // Usuń wieżę ze starej pozycji
+      } 
+    }
+    
 
-     
 
 
     // Usunięcie wybrania tej figury
@@ -473,6 +473,7 @@ void pieceSelected(int row, int col) {
         ),
       );
     }
+
 
     // Zmiana kolejki, czyli po wykonwnaiu ruchu białych, ruch moga wykonac tylko czarne
 
@@ -503,6 +504,7 @@ void pieceSelected(int row, int col) {
           }
         }
     }
+    
 
     return false;
   }
@@ -590,10 +592,7 @@ void pieceSelected(int row, int col) {
   @override 
   Widget build(BuildContext context) {
     return Scaffold(
-      //body: Center(
-        // Centrujemy planszę na ekranie
-        //child: AspectRatio(
-          //aspectRatio: 1, // Zachowaj proporcje 1:1
+      
           
           
         body: Column(
