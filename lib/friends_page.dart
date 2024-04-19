@@ -62,7 +62,7 @@ class _FriendsPageState extends State<FriendsPage> {
     if (textController.text.isNotEmpty) {
       //store in firebase
       FirebaseFirestore.instance.collection("User Posts").add({
-        'UserEmail': currentUser.email,
+        'Username': username,
         'Message': textController.text,
         'TimeStamp': Timestamp.now(),
         'Likes': [],
@@ -142,7 +142,7 @@ class _FriendsPageState extends State<FriendsPage> {
                               likes.contains(currentUser.uid);
                           return WallPost(
                               message: post['Message'],
-                              user: post['UserEmail'],
+                              user: post['Username'],
                               time: formattedTime,
                               postId: postId,
                               likes: likes,
