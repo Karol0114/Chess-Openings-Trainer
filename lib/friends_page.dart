@@ -47,19 +47,38 @@ class _FriendsPageState extends State<FriendsPage> {
   }
 
   void _fetchUsername() async {
-    final userDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(currentUser.uid)
-        .get();
-    setState(() {
-      username = userDoc.data()?[
-          'username']; //pobierz nazwe zuytkownika z dokumentu Firestores
-    });
+    try {
+      print("fetching username for uid: ${currentUser.uid}");
+      final userDoc = await FirebaseFirestore.instance
+          .collection('Users')
+          .doc(currentUser.uid)
+          .get();
+      if (userDoc.exists) {
+        print("user document data: ${userDoc.data()}");
+        if (userDoc.data()?['username'] != null) {
+          setState(() {
+            username = userDoc.data()?['username'];
+            print("fetched username: $username");
+          });
+        } else {
+          print("username is null in the document");
+        }
+      } else {
+        print("user docuemnt does not exist for uid: ${currentUser.uid}");
+      }
+    } catch (e) {
+      print("error fetching usernaem: $e");
+    }
+    // setState(() {
+    //   username = userDoc.data()?[
+    //       'username']; //pobierz nazwe zuytkownika z dokumentu Firestores
+    //   print("Username is: $username");
+    // });
   }
 
   void postMessage() {
     //only post if there is something in the text field
-    if (textController.text.isNotEmpty) {
+    if (textController.text.isNotEmpty && username != null) {
       //store in firebase
       FirebaseFirestore.instance.collection("User Posts").add({
         'Username': username,
@@ -142,7 +161,7 @@ class _FriendsPageState extends State<FriendsPage> {
                               likes.contains(currentUser.uid);
                           return WallPost(
                               message: post['Message'],
-                              user: post['Username'],
+                              user: post['Username'] ?? 'Unknown',
                               time: formattedTime,
                               postId: postId,
                               likes: likes,
@@ -185,7 +204,7 @@ class _FriendsPageState extends State<FriendsPage> {
                 ),
               ),
               Text(
-                "Logged in as: " + (currentUser.email!),
+                "Logged in as: " + (username ?? 'Unknown'),
                 style: TextStyle(color: Colors.grey),
               ),
 
