@@ -31,6 +31,7 @@ class _WallPostState extends State<WallPost> {
   final currentUser = FirebaseAuth.instance.currentUser!;
   bool isLiked = false;
 
+  final _commentTextController = TextEditingController();
   @override
   void initState() {
     super.initState();
@@ -73,70 +74,115 @@ class _WallPostState extends State<WallPost> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-          color: Color.fromARGB(255, 67, 190, 10),
-          borderRadius: BorderRadius.circular(8)),
-      margin: EdgeInsets.only(top: 25, left: 25, right: 25),
-      padding: EdgeInsets.all(25),
-      child: Row(
-        children: [
-          //profile pic
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.grey[400],
-            ),
-            padding: EdgeInsets.all(10),
-            child: Icon(
-              Icons.person,
-              color: Colors.white,
-            ),
-          ),
-          SizedBox(
-            width: 20,
-          ),
-          //expanded to take the remaining space
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.user,
-                  style: TextStyle(color: Colors.grey[800]),
-                ),
-                SizedBox(height: 10),
-                Text(widget.message),
-              ],
-            ),
-          ),
-          LikeButton(isLiked: isLiked, onTap: toggleLike),
-          const SizedBox(
-            width: 20,
-          ),
-          const SizedBox(height: 5),
-          Text(
-            widget.likes.length.toString(),
-            style: TextStyle(color: Colors.grey[600]),
+// add a comment
+  void addComment(String commentText) {
+    //write the comment to firestore under comments collection for this post
+    FirebaseFirestore.instance
+        .collection("User Posts")
+        .doc(widget.postId)
+        .collection("comments")
+        .add({
+      "CommentText": commentText,
+      "CommentedBy": currentUser.email,
+      "CommentTime": Timestamp.now() // remember
+    });
+  }
+
+// show a dialog box for adding comment
+  void showCommentDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Add comment"),
+        content: TextField(
+          controller: _commentTextController,
+          keyboardType: TextInputType.multiline,
+          maxLines: null,
+          decoration: InputDecoration(hintText: "Write a comment..."),
+        ),
+        actions: [
+          //post button
+          TextButton(
+            onPressed: () => addComment(_commentTextController.text),
+            child: Text("Post"),
           ),
 
-          // //message and user email
-          // Column(
-          //   crossAxisAlignment: CrossAxisAlignment.start,
-          //   children: [
-          //     Text(
-          //       user,
-          //       style: TextStyle(color: Colors.grey[800]),
-          //     ),
-          //     const SizedBox(
-          //       height: 10,
-          //     ),
-          //     Text(message),
-          //   ],
-          // )
+          //cancel button
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
         ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(25.0),
+      child: Card(
+        color: Color.fromARGB(255, 67, 190, 10),
+        child: Padding(
+          padding: const EdgeInsets.all(15.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with the user profile pic and username
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: Colors.grey[400],
+                    child: Icon(
+                      Icons.person,
+                      color: Colors.white,
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      widget.user,
+                      style: TextStyle(
+                          color: Colors.grey[800], fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+
+              // Message
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
+                child: Text(widget.message),
+              ),
+
+              // Like and Comment Section
+              Row(
+                children: [
+                  LikeButton(isLiked: isLiked, onTap: toggleLike),
+                  SizedBox(width: 10),
+                  Text(
+                    "${widget.likes.length} likes",
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
+                  Spacer(),
+                  GestureDetector(
+                    onTap: showCommentDialog,
+                    child: Row(
+                      children: [
+                        Icon(Icons.comment, color: Colors.grey[600]),
+                        SizedBox(width: 10),
+                        Text(
+                          "0",
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

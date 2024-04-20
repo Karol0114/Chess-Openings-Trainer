@@ -9,6 +9,19 @@ class Comment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Container(
+      decoration: BoxDecoration(
+          color: Colors.grey[300], borderRadius: BorderRadius.circular(4)),
+      child: Column(
+        children: [
+          //comment
+          Text(text),
+          //user and time
+          Text(user),
+          Text(" • "),
+          Text(time),
+        ],
+      ),
+    );
   }
 }

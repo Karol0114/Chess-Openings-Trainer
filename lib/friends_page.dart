@@ -193,6 +193,7 @@ class _FriendsPageState extends State<FriendsPage> {
                         controller: textController,
                         hintText: 'Write something here!',
                         obscureText: false,
+                        maxLines: null,
                       ),
                     ),
 
