@@ -1,7 +1,27 @@
+import 'package:chess_openings_trainer/compontents/comment.dart';
 import 'package:chess_openings_trainer/compontents/like_button.dart';
+import 'package:chess_openings_trainer/helper/helper_methods.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+Future<String> getUsernameByUid(String uid) async {
+  print('getUsernameByUid called with uid: $uid');
+
+  final usersRef = FirebaseFirestore.instance.collection('Users');
+  final querySnapshot = await usersRef.doc(uid).get();
+
+  if (querySnapshot.exists) {
+    final userData = querySnapshot.data();
+    final username = userData?['username'] ??
+        'nieznany'; // Zakładając, że pole w dokumencie to 'username'
+    print('Username found: $username');
+    return username;
+  }
+
+  print('No matching username found, returning "nieznany"');
+  return 'nieznany';
+}
 
 class WallPost extends StatefulWidget {
   final String message;
@@ -35,7 +55,7 @@ class _WallPostState extends State<WallPost> {
   @override
   void initState() {
     super.initState();
-    isLiked = widget.likes.contains(currentUser.email);
+    isLiked = widget.likes.contains(currentUser.uid);
     checkIfLiked();
   }
 
@@ -83,7 +103,7 @@ class _WallPostState extends State<WallPost> {
         .collection("comments")
         .add({
       "CommentText": commentText,
-      "CommentedBy": currentUser.email,
+      "CommentedBy": currentUser.uid,
       "CommentTime": Timestamp.now() // remember
     });
   }
@@ -103,13 +123,28 @@ class _WallPostState extends State<WallPost> {
         actions: [
           //post button
           TextButton(
-            onPressed: () => addComment(_commentTextController.text),
+            onPressed: () {
+              // add comment
+              addComment(_commentTextController.text);
+
+              // pop box
+              Navigator.pop(context);
+
+              // clear controller
+              _commentTextController.clear();
+            },
             child: Text("Post"),
           ),
 
           //cancel button
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              // pop box
+              Navigator.pop(context);
+
+              // clear controller
+              _commentTextController.clear();
+            },
             child: Text("Cancel"),
           ),
         ],
@@ -120,11 +155,15 @@ class _WallPostState extends State<WallPost> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(25.0),
+      padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 12.0),
       child: Card(
-        color: Color.fromARGB(255, 67, 190, 10),
+        color: Colors.grey[350],
+        elevation: 4,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Padding(
-          padding: const EdgeInsets.all(15.0),
+          padding: const EdgeInsets.all(12.0),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -135,7 +174,7 @@ class _WallPostState extends State<WallPost> {
                     backgroundColor: Colors.grey[400],
                     child: Icon(
                       Icons.person,
-                      color: Colors.white,
+                      color: Colors.black,
                     ),
                   ),
                   SizedBox(width: 10),
@@ -143,7 +182,7 @@ class _WallPostState extends State<WallPost> {
                     child: Text(
                       widget.user,
                       style: TextStyle(
-                          color: Colors.grey[800], fontWeight: FontWeight.bold),
+                          color: Colors.black, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -152,7 +191,13 @@ class _WallPostState extends State<WallPost> {
               // Message
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10.0),
-                child: Text(widget.message),
+                child: Text(
+                  widget.message,
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontWeight: FontWeight.normal,
+                  ),
+                ),
               ),
 
               // Like and Comment Section
@@ -161,8 +206,8 @@ class _WallPostState extends State<WallPost> {
                   LikeButton(isLiked: isLiked, onTap: toggleLike),
                   SizedBox(width: 10),
                   Text(
-                    "${widget.likes.length} likes",
-                    style: TextStyle(color: Colors.grey[600]),
+                    widget.likes.length.toString(),
+                    style: TextStyle(color: Colors.black),
                   ),
                   Spacer(),
                   GestureDetector(
@@ -171,14 +216,90 @@ class _WallPostState extends State<WallPost> {
                       children: [
                         Icon(Icons.comment, color: Colors.grey[600]),
                         SizedBox(width: 10),
-                        Text(
-                          "0",
-                          style: TextStyle(color: Colors.grey[600]),
-                        ),
+                        StreamBuilder<QuerySnapshot>(
+                            stream: FirebaseFirestore.instance
+                                .collection("User Posts")
+                                .doc(widget.postId)
+                                .collection("comments")
+                                .snapshots(),
+                            builder: (BuildContext context,
+                                AsyncSnapshot<QuerySnapshot> snapshot) {
+                              if (snapshot.hasData) {
+                                // liczba odkumentow to liczba komentarzy
+                                int commentsCount = snapshot.data!.docs.length;
+                                return Text(
+                                  commentsCount.toString(),
+                                  style: TextStyle(color: Colors.grey[600]),
+                                );
+                              } else {
+                                //jesli nie ma danych zwroc 0
+                                return Text(
+                                  '0',
+                                  style: TextStyle(color: Colors.grey[600]),
+                                );
+                              }
+                            })
                       ],
                     ),
                   ),
                 ],
+              ),
+
+              // Comments under the post
+              StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection("User Posts")
+                    .doc(widget.postId)
+                    .collection("comments")
+                    .orderBy("CommentTime", descending: true)
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  List<Widget> commentWidgets = snapshot.data!.docs.map((doc) {
+                    final commentData = doc.data() as Map<String, dynamic>;
+                    final commenterUid = commentData['CommentedBy'] ?? '';
+
+                    return FutureBuilder<String>(
+                      future: getUsernameByUid(commenterUid),
+                      builder: (BuildContext context,
+                          AsyncSnapshot<String> snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text(
+                              "Błąd ładowania danych: ${snapshot.error}");
+                        } else if (snapshot.hasData) {
+                          final username = snapshot.data ?? 'Anonim';
+                          return Comment(
+                            text: commentData["CommentText"] ??
+                                'Brak tekstu komentarza',
+                            user: username,
+                            time: commentData["CommentTime"] != null
+                                ? formatDate(
+                                    commentData["CommentTime"] as Timestamp)
+                                : 'Brak daty',
+                          );
+                        } else {
+                          return const Text('Brak danych');
+                        }
+                      },
+                    );
+                  }).toList();
+
+                  return ListView(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    children: commentWidgets,
+                  );
+                },
               ),
             ],
           ),

@@ -71,7 +71,7 @@ class _MyHomePageState extends State<MyHomePage> {
           _buildTitle('Play openings', Icons.play_arrow),
           _buildTitle('Openings score', Icons.check_circle_outline_rounded),
           _buildTitle('Play game', Icons.gamepad),
-          _buildTitle('Friends', Icons.people),
+          _buildTitle('Community', Icons.people),
           _buildTitle('Profile', Icons.person_4)
         ],
       ),
@@ -95,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
         } else if (title == 'Play game') {
           var push = Navigator.push(context,
               MaterialPageRoute(builder: (context) => const GameBoard()));
-        } else if (title == 'Friends') {
+        } else if (title == 'Community') {
           var push = Navigator.push(context,
               MaterialPageRoute(builder: (context) => const FriendsPage()));
         } else if (title == 'Profile') {
