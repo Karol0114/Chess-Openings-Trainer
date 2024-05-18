@@ -1,10 +1,11 @@
 import 'package:chess_openings_trainer/chess_board.dart';
-import 'package:chess_openings_trainer/friends_page.dart';
+import 'package:chess_openings_trainer/community_page.dart';
 import 'package:chess_openings_trainer/learn_openings_page.dart';
 import 'package:chess_openings_trainer/signin_page.dart';
+import 'package:chess_openings_trainer/friends_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'friends_page.dart';
+import 'community_page.dart';
 import 'profile_page.dart';
 import 'package:chess_openings_trainer/play_openings.dart';
 //import 'package:chess_openings_trainer/learn_openings_page.dart';
@@ -34,8 +35,8 @@ class MyApp extends StatelessWidget {
           secondary: Colors.blue,
         ),
         textTheme: const TextTheme(
-          bodyText1: TextStyle(color: Colors.white),
-          bodyText2: TextStyle(color: Colors.white),
+          bodyLarge: TextStyle(color: Colors.white),
+          bodyMedium: TextStyle(color: Colors.white),
         ),
       ),
       home: const SignInScreen(),
@@ -72,7 +73,8 @@ class _MyHomePageState extends State<MyHomePage> {
           _buildTitle('Openings score', Icons.check_circle_outline_rounded),
           _buildTitle('Play game', Icons.gamepad),
           _buildTitle('Community', Icons.people),
-          _buildTitle('Profile', Icons.person_4)
+          _buildTitle('Profile', Icons.person_4),
+          _buildTitle('Friends', Icons.person_add),
         ],
       ),
     );
@@ -97,10 +99,13 @@ class _MyHomePageState extends State<MyHomePage> {
               MaterialPageRoute(builder: (context) => const GameBoard()));
         } else if (title == 'Community') {
           var push = Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const FriendsPage()));
+              MaterialPageRoute(builder: (context) => const CommunityPage()));
         } else if (title == 'Profile') {
           var push = Navigator.push(
               context, MaterialPageRoute(builder: (context) => ProfilePage()));
+        } else if (title == 'Friends') {
+          var push = Navigator.push(
+              context, MaterialPageRoute(builder: (context) => FriendsPage()));
         }
         print('$title tapped!');
       },

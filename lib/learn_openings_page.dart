@@ -58,7 +58,7 @@ class OpeningsPage extends StatelessWidget {
       data: ThemeData(
         unselectedWidgetColor: Colors.white,
         textTheme: TextTheme(
-          subtitle1: TextStyle(color: Colors.white),
+          titleMedium: TextStyle(color: Colors.white),
         ),
         expansionTileTheme: ExpansionTileThemeData(
           iconColor: Colors.white,
