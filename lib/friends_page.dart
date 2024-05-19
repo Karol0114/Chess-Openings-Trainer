@@ -35,15 +35,19 @@ class FriendsList extends StatelessWidget {
           .collection('friends')
           .snapshots(),
       builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (!snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
           return Center(child: CircularProgressIndicator());
         }
 
-        var friends = snapshot.data!.docs;
+        if (snapshot.hasError) {
+          return Center(child: Text('Error loading friends'));
+        }
 
-        if (friends.isEmpty) {
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
           return Center(child: Text('No friends found'));
         }
+
+        var friends = snapshot.data!.docs;
 
         return ListView.builder(
           itemCount: friends.length,

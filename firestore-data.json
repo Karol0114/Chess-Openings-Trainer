@@ -1,0 +1,41 @@
+{
+	"Users": {
+		"admin": {
+			"name": "Admin",
+			"email": "admin@example.com",
+			"friends": {
+				"Karol": {
+					"username": "Karol",
+					"friendId": "Karol"
+				}
+			}
+		},
+		"Karol": {
+			"name": "Karol",
+			"email": "karol@example.com",
+			"friends": {
+				"admin": {
+					"username": "Admin",
+					"friendId": "admin"
+				}
+			}
+		}
+	},
+	"Chats": {
+		"admin_Karol": {
+			"members": ["admin", "Karol"],
+			"messages": {
+				"msg1": {
+					"text": "Hello Karol!",
+					"sender": "admin",
+					"timestamp": { "_seconds": 1672531199, "_nanoseconds": 0 }
+				},
+				"msg2": {
+					"text": "Hello Admin!",
+					"sender": "Karol",
+					"timestamp": { "_seconds": 1672531259, "_nanoseconds": 0 }
+				}
+			}
+		}
+	}
+}
