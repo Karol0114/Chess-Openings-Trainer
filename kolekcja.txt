@@ -1,0 +1,30 @@
+kolekcja 
+Users 
+    - 1ajPrvbK5oOMEG2LKi3xHNHfZe12
+        username:"admin"
+        bio:"kocham admina"
+        kolekcja friends:
+           - B3JGES4XmrRtUDcwd9KUQKhHUpi1
+                username:"karol"
+           - pOOKR6NdKg3AMj5TAdEA
+                username:"huj"
+
+
+    - 1ajPrvbK5oOMEG2LKi3xHNHfZe12
+    bio:"czaro to nie twoja liga nba xd"
+    username:"karol"
+Chats
+    - BegQaBIPZ3hz3IIbqn8G
+        members:
+        0 "B3JGES4XmrRtUDcwd9KUQKhHUpi1"
+        1 "1ajPrvbK5oOMEG2LKi3xHNHfZe12"
+        kolekcja messages
+            - 1ajPrvbK5oOMEG2LKi3xHNHfZe12
+                sender: "B3JGES4XmrRtUDcwd9KUQKhHUpi1"
+                text: "hejj"
+                timestamp: May 14, 2024 at 12:00:00 AM UTC+2
+
+            - uKyWuAtDWEM6wqCrNwhO
+                sender: "1ajPrvbK5oOMEG2LKi3xHNHfZe12"
+                text: "hejak"
+                timestamp: May 18, 2024 at 12:00:00 AM UTC+2
