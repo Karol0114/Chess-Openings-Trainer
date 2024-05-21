@@ -7,9 +7,9 @@ import 'package:chess_openings_trainer/compontents/square.dart';
 import 'package:flutter/widgets.dart';
 
 class GameBoard extends StatefulWidget {
-  
+  final String gameId;
 
-  const GameBoard({super.key});
+  const GameBoard({super.key, required this.gameId});
 
   @override 
   State<GameBoard> createState() => _GameBoardState();

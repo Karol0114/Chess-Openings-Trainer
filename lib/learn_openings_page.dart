@@ -83,7 +83,7 @@ class OpeningsPage extends StatelessWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => GameBoard(),
+                builder: (context) => GameBoard(gameId: 'test',),
               ),
 
             );

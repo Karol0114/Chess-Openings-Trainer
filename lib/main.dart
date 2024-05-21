@@ -1,4 +1,5 @@
 import 'package:chess_openings_trainer/chess_board.dart';
+import 'package:chess_openings_trainer/play_game.dart';
 import 'package:chess_openings_trainer/community_page.dart';
 import 'package:chess_openings_trainer/learn_openings_page.dart';
 import 'package:chess_openings_trainer/signin_page.dart';
@@ -75,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
           _buildTitle('Community', Icons.people),
           _buildTitle('Profile', Icons.person_4),
           _buildTitle('Friends', Icons.person_add),
+          _buildTitle('Test_lobby', Icons.gamepad),
         ],
       ),
     );
@@ -96,7 +98,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   builder: (context) => const CountingScoreOpenings()));
         } else if (title == 'Play game') {
           var push = Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const GameBoard()));
+              MaterialPageRoute(builder: (context) => const GameBoard(gameId: 'test',)));
         } else if (title == 'Community') {
           var push = Navigator.push(context,
               MaterialPageRoute(builder: (context) => const CommunityPage()));
@@ -106,6 +108,9 @@ class _MyHomePageState extends State<MyHomePage> {
         } else if (title == 'Friends') {
           var push = Navigator.push(
               context, MaterialPageRoute(builder: (context) => FriendsPage()));
+        } else if (title == 'Test_lobby') {
+          var push = Navigator.push(
+              context, MaterialPageRoute(builder: (context) => LobbyPage()));
         }
         print('$title tapped!');
       },
