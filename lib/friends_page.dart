@@ -55,16 +55,21 @@ class FriendsList extends StatelessWidget {
             var friend = friends[index];
             return Card(
               margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.0),
+              ),
+              elevation: 4,
               child: ListTile(
-                title: Center(
-                  child: Text(
-                    friend['username'],
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                contentPadding:
+                    EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                title: Text(
+                  friend['username'],
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
+                trailing: Icon(Icons.chat, color: Colors.blueAccent),
                 onTap: () {
                   Navigator.push(
                     context,

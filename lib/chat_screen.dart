@@ -29,126 +29,155 @@ class _ChatScreenState extends State<ChatScreen> {
         ? '${user.uid}_${widget.friendId}'
         : '${widget.friendId}_${user.uid}';
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Chat with ${widget.friendName}'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder(
-              stream: firestore
-                  .collection('Chats')
-                  .doc(chatId)
-                  .collection('messages')
-                  .orderBy('timestamp', descending: true)
-                  .snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
+    return Column(
+      children: [
+        Expanded(
+          child: StreamBuilder(
+            stream: firestore
+                .collection('Chats')
+                .doc(chatId)
+                .collection('messages')
+                .orderBy('timestamp')
+                .snapshots(),
+            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
 
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error loading messages'));
-                }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error loading messages'));
+              }
 
-                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No messages found'));
-                }
+              if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                return Center(child: Text('No messages found'));
+              }
 
-                var messages = snapshot.data!.docs;
+              var messages = snapshot.data!.docs;
+              List<Widget> messageWidgets = [];
+              DateTime? lastMessageDate;
 
-                return ListView.builder(
-                  reverse: true,
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    var message = messages[index];
-                    var messageText = message['text'] ?? '';
-                    var messageSender = message['sender'] ?? '';
-                    var messageTimestamp = message['timestamp'] != null
-                        ? (message['timestamp'] as Timestamp).toDate()
-                        : DateTime.now();
+              for (var message in messages) {
+                var messageText = message['text'] ?? '';
+                var messageSender = message['senderId'] ?? 'unknown';
+                var messageTimestamp = message['timestamp'] != null
+                    ? (message['timestamp'] as Timestamp).toDate()
+                    : DateTime.now();
 
-                    bool isMe = messageSender == user.uid;
+                bool isMe = messageSender == user.uid;
+                DateTime messageDate = DateTime(
+                  messageTimestamp.year,
+                  messageTimestamp.month,
+                  messageTimestamp.day,
+                );
 
-                    return Align(
-                      alignment:
-                          isMe ? Alignment.centerRight : Alignment.centerLeft,
+                if (lastMessageDate == null ||
+                    lastMessageDate!.difference(messageDate).inDays != 0) {
+                  messageWidgets.add(
+                    Center(
                       child: Container(
-                        margin: EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 10.0),
+                        margin: EdgeInsets.symmetric(vertical: 10.0),
                         padding: EdgeInsets.symmetric(
-                            vertical: 10.0, horizontal: 20.0),
+                            vertical: 5.0, horizontal: 10.0),
                         decoration: BoxDecoration(
-                          color: isMe ? Colors.lightBlueAccent : Colors.white,
+                          color: Colors.grey[300],
                           borderRadius: BorderRadius.circular(10.0),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 5.0,
-                              spreadRadius: 1.0,
-                            ),
-                          ],
                         ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              isMe ? 'You' : widget.friendName,
-                              style: TextStyle(
-                                fontSize: 12.0,
-                                color: isMe ? Colors.white70 : Colors.black54,
-                              ),
-                            ),
-                            SizedBox(height: 5.0),
-                            Text(
-                              messageText,
-                              style: TextStyle(
-                                fontSize: 15.0,
-                                color: isMe ? Colors.white : Colors.black54,
-                              ),
-                            ),
-                            SizedBox(height: 5.0),
-                            Text(
-                              DateFormat('hh:mm a').format(messageTimestamp),
-                              style: TextStyle(
-                                fontSize: 12.0,
-                                color: isMe ? Colors.white70 : Colors.black54,
-                              ),
-                            ),
-                          ],
+                        child: Text(
+                          DateFormat('dd.MM.yyyy').format(messageDate),
+                          style: TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.black54,
+                          ),
                         ),
                       ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: messageController,
-                    decoration: InputDecoration(
-                      labelText: 'Enter message',
-                      border: OutlineInputBorder(),
+                    ),
+                  );
+                  lastMessageDate = messageDate;
+                }
+
+                messageWidgets.add(
+                  Align(
+                    alignment:
+                        isMe ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Container(
+                      margin: EdgeInsets.symmetric(
+                          vertical: 10.0, horizontal: 10.0),
+                      padding: EdgeInsets.symmetric(
+                          vertical: 10.0, horizontal: 20.0),
+                      decoration: BoxDecoration(
+                        color: isMe ? Colors.lightBlueAccent : Colors.white,
+                        borderRadius: BorderRadius.circular(10.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black26,
+                            blurRadius: 5.0,
+                            spreadRadius: 1.0,
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isMe ? 'You' : widget.friendName,
+                            style: TextStyle(
+                              fontSize: 12.0,
+                              color: isMe ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                          SizedBox(height: 5.0),
+                          Text(
+                            messageText,
+                            style: TextStyle(
+                              fontSize: 15.0,
+                              color: isMe ? Colors.white : Colors.black54,
+                            ),
+                          ),
+                          SizedBox(height: 5.0),
+                          Text(
+                            DateFormat('HH:mm').format(messageTimestamp),
+                            style: TextStyle(
+                              fontSize: 12.0,
+                              color: isMe ? Colors.white70 : Colors.black54,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send),
-                  onPressed: () {
-                    _sendMessage(user.uid, chatId);
-                  },
-                ),
-              ],
-            ),
+                );
+              }
+
+              return ListView(
+                reverse: true,
+                children: messageWidgets.reversed.toList(),
+              );
+            },
           ),
-        ],
-      ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: messageController,
+                  decoration: InputDecoration(
+                    labelText: 'Enter message',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.send),
+                onPressed: () {
+                  _sendMessage(user.uid, chatId);
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -156,7 +185,7 @@ class _ChatScreenState extends State<ChatScreen> {
     if (messageController.text.isNotEmpty) {
       var messageData = {
         'text': messageController.text,
-        'sender': senderId,
+        'senderId': senderId,
         'timestamp': FieldValue.serverTimestamp(),
       };
 
