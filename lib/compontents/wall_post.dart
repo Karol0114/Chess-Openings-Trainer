@@ -1,29 +1,10 @@
-import 'package:chess_openings_trainer/compontents/comment.dart';
-import 'package:chess_openings_trainer/compontents/like_button.dart';
-import 'package:chess_openings_trainer/helper/helper_methods.dart';
+import "package:flutter/material.dart";
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'comment.dart';
 
-Future<String> getUsernameByUid(String uid) async {
-  print('getUsernameByUid called with uid: $uid');
-
-  final usersRef = FirebaseFirestore.instance.collection('Users');
-  final querySnapshot = await usersRef.doc(uid).get();
-
-  if (querySnapshot.exists) {
-    final userData = querySnapshot.data();
-    final username = userData?['username'] ??
-        'nieznany'; // Zakładając, że pole w dokumencie to 'username'
-    print('Username found: $username');
-    return username;
-  }
-
-  print('No matching username found, returning "nieznany"');
-  return 'nieznany';
-}
-
-class WallPost extends StatefulWidget {
+class WallPost extends StatelessWidget {
   final String message;
   final String user;
   final String time;
@@ -31,6 +12,7 @@ class WallPost extends StatefulWidget {
   final List<String> likes;
   final bool isLiked;
   final void Function(bool) onLikeTap;
+  final VoidCallback onCommentsLoaded;
 
   const WallPost({
     super.key,
@@ -41,116 +23,8 @@ class WallPost extends StatefulWidget {
     required this.likes,
     required this.isLiked,
     required this.onLikeTap,
+    required this.onCommentsLoaded,
   });
-
-  @override
-  State<WallPost> createState() => _WallPostState();
-}
-
-class _WallPostState extends State<WallPost> {
-  final currentUser = FirebaseAuth.instance.currentUser!;
-  bool isLiked = false;
-
-  final _commentTextController = TextEditingController();
-  @override
-  void initState() {
-    super.initState();
-    isLiked = widget.likes.contains(currentUser.uid);
-    checkIfLiked();
-  }
-
-  void checkIfLiked() async {
-    DocumentReference postRef =
-        FirebaseFirestore.instance.collection('User Posts').doc(widget.postId);
-
-    DocumentSnapshot snapshot = await postRef.get();
-    if (snapshot.exists) {
-      Map<String, dynamic> postData = snapshot.data() as Map<String, dynamic>;
-      List<String> likesList = List<String>.from(postData['Likes'] ?? []);
-      setState(() {
-        isLiked = likesList.contains(currentUser.uid);
-      });
-    }
-  }
-
-  void toggleLike() async {
-    final newIsLiked = !isLiked;
-    setState(() {
-      isLiked = newIsLiked;
-    });
-    widget.onLikeTap(newIsLiked);
-
-    DocumentReference postRef =
-        FirebaseFirestore.instance.collection('User Posts').doc(widget.postId);
-
-    if (newIsLiked) {
-      await postRef.update({
-        'Likes': FieldValue.arrayUnion([currentUser.uid])
-      });
-    } else {
-      await postRef.update({
-        'Likes': FieldValue.arrayRemove([currentUser.uid])
-      });
-    }
-  }
-
-// add a comment
-  void addComment(String commentText) {
-    //write the comment to firestore under comments collection for this post
-    FirebaseFirestore.instance
-        .collection("User Posts")
-        .doc(widget.postId)
-        .collection("comments")
-        .add({
-      "CommentText": commentText,
-      "CommentedBy": currentUser.uid,
-      "CommentTime": Timestamp.now() // remember
-    });
-  }
-
-// show a dialog box for adding comment
-  void showCommentDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Add comment"),
-        content: TextField(
-          controller: _commentTextController,
-          keyboardType: TextInputType.multiline,
-          maxLines: null,
-          decoration: InputDecoration(hintText: "Write a comment..."),
-        ),
-        actions: [
-          //post button
-          TextButton(
-            onPressed: () {
-              // add comment
-              addComment(_commentTextController.text);
-
-              // pop box
-              Navigator.pop(context);
-
-              // clear controller
-              _commentTextController.clear();
-            },
-            child: Text("Post"),
-          ),
-
-          //cancel button
-          TextButton(
-            onPressed: () {
-              // pop box
-              Navigator.pop(context);
-
-              // clear controller
-              _commentTextController.clear();
-            },
-            child: Text("Cancel"),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,7 +41,6 @@ class _WallPostState extends State<WallPost> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Header with the user profile pic and username
               Row(
                 children: [
                   CircleAvatar(
@@ -180,76 +53,85 @@ class _WallPostState extends State<WallPost> {
                   SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      widget.user,
+                      user,
                       style: TextStyle(
-                          color: Colors.black, fontWeight: FontWeight.bold),
+                        color: Colors.black,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    time,
+                    style: TextStyle(
+                      color: Colors.grey[600],
                     ),
                   ),
                 ],
               ),
-
-              // Message
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10.0),
                 child: Text(
-                  widget.message,
+                  message,
                   style: TextStyle(
                     color: Colors.black,
                     fontWeight: FontWeight.normal,
                   ),
                 ),
               ),
-
-              // Like and Comment Section
               Row(
                 children: [
-                  LikeButton(isLiked: isLiked, onTap: toggleLike),
+                  GestureDetector(
+                    onTap: () => onLikeTap(!isLiked),
+                    child: Icon(
+                      isLiked ? Icons.favorite : Icons.favorite_border,
+                      color: isLiked ? Colors.red : Colors.grey,
+                    ),
+                  ),
                   SizedBox(width: 10),
                   Text(
-                    widget.likes.length.toString(),
+                    likes.length.toString(),
                     style: TextStyle(color: Colors.black),
                   ),
                   Spacer(),
                   GestureDetector(
-                    onTap: showCommentDialog,
+                    onTap: () => showCommentDialog(context),
                     child: Row(
                       children: [
                         Icon(Icons.comment, color: Colors.grey[600]),
                         SizedBox(width: 10),
                         StreamBuilder<QuerySnapshot>(
-                            stream: FirebaseFirestore.instance
-                                .collection("User Posts")
-                                .doc(widget.postId)
-                                .collection("comments")
-                                .snapshots(),
-                            builder: (BuildContext context,
-                                AsyncSnapshot<QuerySnapshot> snapshot) {
-                              if (snapshot.hasData) {
-                                // liczba odkumentow to liczba komentarzy
-                                int commentsCount = snapshot.data!.docs.length;
-                                return Text(
-                                  commentsCount.toString(),
-                                  style: TextStyle(color: Colors.grey[600]),
-                                );
-                              } else {
-                                //jesli nie ma danych zwroc 0
-                                return Text(
-                                  '0',
-                                  style: TextStyle(color: Colors.grey[600]),
-                                );
-                              }
-                            })
+                          stream: FirebaseFirestore.instance
+                              .collection("User Posts")
+                              .doc(postId)
+                              .collection("comments")
+                              .snapshots(),
+                          builder: (context, snapshot) {
+                            if (snapshot.hasData) {
+                              int commentsCount = snapshot.data!.docs.length;
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                onCommentsLoaded();
+                              });
+                              return Text(
+                                commentsCount.toString(),
+                                style: TextStyle(color: Colors.grey[600]),
+                              );
+                            } else {
+                              return Text(
+                                '0',
+                                style: TextStyle(color: Colors.grey[600]),
+                              );
+                            }
+                          },
+                        ),
                       ],
                     ),
                   ),
                 ],
               ),
-
-              // Comments under the post
               StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
                     .collection("User Posts")
-                    .doc(widget.postId)
+                    .doc(postId)
                     .collection("comments")
                     .orderBy("CommentTime", descending: true)
                     .snapshots(),
@@ -257,11 +139,9 @@ class _WallPostState extends State<WallPost> {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
-
                   List<Widget> commentWidgets = snapshot.data!.docs.map((doc) {
                     final commentData = doc.data() as Map<String, dynamic>;
                     final commenterUid = commentData['CommentedBy'] ?? '';
-
                     return FutureBuilder<String>(
                       future: getUsernameByUid(commenterUid),
                       builder: (BuildContext context,
@@ -282,10 +162,8 @@ class _WallPostState extends State<WallPost> {
                             text: commentData["CommentText"] ??
                                 'Brak tekstu komentarza',
                             user: username,
-                            time: commentData["CommentTime"] != null
-                                ? formatDate(
-                                    commentData["CommentTime"] as Timestamp)
-                                : 'Brak daty',
+                            time: commentData["CommentTime"]
+                                as Timestamp, // Przekazywanie obiektu Timestamp
                           );
                         } else {
                           return const Text('Brak danych');
@@ -293,7 +171,6 @@ class _WallPostState extends State<WallPost> {
                       },
                     );
                   }).toList();
-
                   return ListView(
                     shrinkWrap: true,
                     physics: NeverScrollableScrollPhysics(),
@@ -306,5 +183,65 @@ class _WallPostState extends State<WallPost> {
         ),
       ),
     );
+  }
+
+  void showCommentDialog(BuildContext context) {
+    TextEditingController _commentTextController = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Add comment"),
+        content: TextField(
+          controller: _commentTextController,
+          keyboardType: TextInputType.multiline,
+          maxLines: null,
+          decoration: InputDecoration(hintText: "Write a comment..."),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _commentTextController.clear();
+            },
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              addComment(_commentTextController.text);
+              Navigator.pop(context);
+              _commentTextController.clear();
+            },
+            child: Text("Post"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void addComment(String commentText) {
+    FirebaseFirestore.instance
+        .collection("User Posts")
+        .doc(postId)
+        .collection("comments")
+        .add({
+      "CommentText": commentText,
+      "CommentedBy": FirebaseAuth.instance.currentUser!.uid,
+      "CommentTime": Timestamp.now(),
+    });
+  }
+
+  Future<String> getUsernameByUid(String uid) async {
+    final usersRef = FirebaseFirestore.instance.collection('Users');
+    final querySnapshot = await usersRef.doc(uid).get();
+    if (querySnapshot.exists) {
+      final userData = querySnapshot.data();
+      return userData?['username'] ?? 'nieznany';
+    }
+    return 'nieznany';
+  }
+
+  String formatDate(Timestamp timestamp) {
+    DateTime date = timestamp.toDate();
+    return DateFormat('dd-MM HH:mm').format(date);
   }
 }

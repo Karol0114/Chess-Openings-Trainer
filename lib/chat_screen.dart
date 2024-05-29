@@ -17,6 +17,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
   final FirebaseAuth auth = FirebaseAuth.instance;
   final TextEditingController messageController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   @override
   Widget build(BuildContext context) {
@@ -149,6 +150,7 @@ class _ChatScreenState extends State<ChatScreen> {
               }
 
               return ListView(
+                controller: _scrollController,
                 reverse: true,
                 children: messageWidgets.reversed.toList(),
               );
@@ -166,6 +168,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     labelText: 'Enter message',
                     border: OutlineInputBorder(),
                   ),
+                  maxLines: null, // Allow multiple lines
                 ),
               ),
               IconButton(
@@ -199,6 +202,17 @@ class _ChatScreenState extends State<ChatScreen> {
 
       await chatDoc.collection('messages').add(messageData);
       messageController.clear();
+      _scrollToBottom(); // Scroll to bottom after sending message
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.minScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 }

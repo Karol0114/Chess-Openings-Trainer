@@ -1,14 +1,23 @@
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
 class Comment extends StatelessWidget {
   final String text;
   final String user;
-  final String time;
-  const Comment(
-      {super.key, required this.text, required this.user, required this.time});
+  final Timestamp time; // Przekazywanie obiektu Timestamp
+
+  const Comment({
+    super.key,
+    required this.text,
+    required this.user,
+    required this.time,
+  });
 
   @override
   Widget build(BuildContext context) {
+    String formattedTime = DateFormat('dd-MM HH:mm').format(time.toDate());
+
     return Container(
       decoration: BoxDecoration(
           color: Colors.grey[400],
@@ -25,7 +34,6 @@ class Comment extends StatelessWidget {
       padding: EdgeInsets.all(12),
       child: Column(
         children: [
-          //comment
           Text(
             text,
             style: TextStyle(
@@ -35,7 +43,6 @@ class Comment extends StatelessWidget {
           const SizedBox(
             height: 6,
           ),
-          //user and time
           Row(
             children: [
               Text(user,
@@ -44,7 +51,7 @@ class Comment extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   )),
               Spacer(),
-              Text(time,
+              Text(formattedTime,
                   style: TextStyle(
                     color: Colors.grey[600],
                   )),

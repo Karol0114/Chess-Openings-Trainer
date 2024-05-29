@@ -2,7 +2,6 @@ import 'package:chess_openings_trainer/reusable_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:chess_openings_trainer/home_page.dart';
-//import 'package:firebase_signin/utils/color_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:chess_openings_trainer/signin_page.dart';
 
@@ -21,12 +20,11 @@ Future<bool> isUsernameUnique(String username) async {
   return !usernameResult.exists;
 }
 
-
-
 class _SignUpScreenState extends State<SignUpScreen> {
   TextEditingController _passwordTextController = TextEditingController();
   TextEditingController _emailTextController = TextEditingController();
   TextEditingController _userNameTextController = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -47,27 +45,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
             padding: EdgeInsets.fromLTRB(20, 120, 20, 0),
             child: Column(
               children: <Widget>[
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
                 reusableTextField("Enter UserName", Icons.person_outline, false,
                     _userNameTextController),
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
                 reusableTextField("Enter Email Id", Icons.person_outline, false,
                     _emailTextController),
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
                 reusableTextField("Enter Password", Icons.lock_outlined, true,
                     _passwordTextController),
-                const SizedBox(
-                  height: 20,
-                ),
+                const SizedBox(height: 20),
                 firebaseUIButton(context, "Sign Up", () async {
                   String username = _userNameTextController.text;
                   String email = _emailTextController.text;
+
                   if (await isUsernameUnique(username)) {
                     try {
                       UserCredential userCredential = await FirebaseAuth
@@ -77,15 +68,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         password: _passwordTextController.text,
                       );
 
-                      //Add user to the Firestore database
+                      // Add user to the Firestore database
                       await FirebaseFirestore.instance
                           .collection("Users")
                           .doc(userCredential.user!.uid)
                           .set({
                         'username': _userNameTextController.text,
                         'bio': 'Empty bio',
-                        //here you can add additional user info like below:
                       });
+
+                      // Add username to the usernames collection
                       await FirebaseFirestore.instance
                           .collection('usernames')
                           .doc(username)
@@ -102,17 +94,20 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     } catch (e) {
                       print("Error: ${e.toString()}");
                       if (e is FirebaseAuthException) {
-                        if(e.code == 'email-already-in-use') {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Email is already in use")));
+                        if (e.code == 'email-already-in-use') {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(
+                                  "Email is already in use, try to log in or click 'Forgot Password?'")));
                         } else {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message ?? "An error occurred")));
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text(e.message ?? "An error occurred")));
                         }
                       }
                     }
-                  } else if (!await isUsernameUnique(username)) {
+                  } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text("Username is already taken")));
-                  } 
+                  }
                 })
               ],
             ),
