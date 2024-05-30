@@ -452,6 +452,8 @@ void promotePawn(int row, int col, bool isWhite) {
     }
     
 
+    
+
 
 
     // Usunięcie wybrania tej figury

@@ -24,8 +24,7 @@ class _LobbyPageState extends State<LobbyPage> {
 
     DocumentReference gameRef =
         await FirebaseFirestore.instance.collection('games').add(newGame);
-    return gameRef
-        .id; // Zwróć ID gry, które będzie używane do dołączania do gry
+    return gameRef.id; // Zwróć ID gry, które będzie używane do dołączania do gry
   }
 
   Future<bool> joinGame(String gameId) async {
@@ -47,6 +46,10 @@ class _LobbyPageState extends State<LobbyPage> {
   }
   return false; // Nie udało się dołączyć
 }
+
+
+
+
 
   @override
   void initState() {
