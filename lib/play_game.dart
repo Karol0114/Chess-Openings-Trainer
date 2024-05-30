@@ -15,7 +15,6 @@ class _LobbyPageState extends State<LobbyPage> {
     var newGame = {
       "players": [
         FirebaseAuth.instance.currentUser!.uid,
-        "8KopactO7CYoUsHKkdrDKmcaKNx1"
       ], // aktualnie zalogowany użytkownik jako biały
       "status": "waiting", // oczekiwanie na drugiego gracza
       "moves": [],

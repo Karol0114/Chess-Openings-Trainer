@@ -121,15 +121,6 @@ class _ProfilePageState extends State<ProfilePage> {
                 onPressed: () =>
                     editField('bio', userData['bio'] ?? 'no bio avaliable'),
               ),
-              const SizedBox(height: 50),
-              // user posts
-              Padding(
-                padding: const EdgeInsets.only(left: 25.0),
-                child: Text(
-                  'My Posts',
-                  style: TextStyle(color: Colors.grey[600]),
-                ),
-              ),
               // button
               ElevatedButton(
                 onPressed: () => _signOut(context),
