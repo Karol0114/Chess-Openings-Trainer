@@ -15,7 +15,6 @@ class _LobbyPageState extends State<LobbyPage> {
     var newGame = {
       "players": [
         FirebaseAuth.instance.currentUser!.uid,
-        "8KopactO7CYoUsHKkdrDKmcaKNx1"
       ], // aktualnie zalogowany użytkownik jako biały
       "status": "waiting", // oczekiwanie na drugiego gracza
       "moves": [],
@@ -30,22 +29,24 @@ class _LobbyPageState extends State<LobbyPage> {
   }
 
   Future<bool> joinGame(String gameId) async {
-    DocumentReference gameRef =
-        FirebaseFirestore.instance.collection('games').doc(gameId);
+    DocumentReference gameRef = FirebaseFirestore.instance.collection('games').doc(gameId);
     DocumentSnapshot gameSnap = await gameRef.get();
 
-    if (gameSnap.exists &&
-        (gameSnap.data()! as Map<String, dynamic>)['players'].length == 1 &&
-        (gameSnap.data()! as Map<String, dynamic>)['status'] == 'waiting') {
+  if (gameSnap.exists) {
+    Map<String, dynamic> gameData = gameSnap.data() as Map<String, dynamic>;
+    List<dynamic> players = gameData['players'];
+
+    // Sprawdź czy gra oczekuje na drugiego gracza i czy aktualnie zalogowany użytkownik nie jest już graczem
+    if (gameData['status'] == 'waiting' && players.length == 1 && !players.contains(FirebaseAuth.instance.currentUser!.uid)) {
       await gameRef.update({
-        'players':
-            FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid]),
-        'status': 'inProgress' // zmiana statusu gry na 'w trakcie'
+        'players': FieldValue.arrayUnion([FirebaseAuth.instance.currentUser!.uid]),
+        'status': 'inProgress' // Zmiana statusu gry na 'w trakcie'
       });
-      return true; // dołączenie powiodło się
+      return true; // Dołączenie powiodło się
     }
-    return false; // nie udało się dołączyć
   }
+  return false; // Nie udało się dołączyć
+}
 
   @override
   void initState() {
