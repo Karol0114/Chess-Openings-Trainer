@@ -17,7 +17,7 @@ class GameBoard extends StatefulWidget {
 
 class _GameBoardState extends State<GameBoard> {
 
-  // tablica 2 wymairowa ktora bedzie reprezentować plansze zachową, wraz z odpowiednią pozycja srtartową figury
+  // tablica 2 wymairowa ktora bedzie reprezentować plansze szachową, wraz z odpowiednią pozycja srtartową figury
 
   late List<List<ChessPiece?>> board;
 
