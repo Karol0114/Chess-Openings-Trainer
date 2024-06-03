@@ -22,6 +22,7 @@ class _GameBoardState extends State<GameBoard> {
 
 
 
+
 void makeMove(String move) {
   // Funkcja, która wykonuje ruch i zapisuje go w Firestore
   FirebaseFirestore.instance.collection('games').doc(widget.gameId).update({
@@ -29,6 +30,7 @@ void makeMove(String move) {
   });
 }
   // tablica 2 wymairowa ktora bedzie reprezentować plansze zachową, wraz z odpowiednią pozycja srtartową figury
+
 
   late List<List<ChessPiece?>> board;
 

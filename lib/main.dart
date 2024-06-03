@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'community_page.dart';
 import 'profile_page.dart';
 import 'package:chess_openings_trainer/play_openings.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 //import 'package:chess_openings_trainer/learn_openings_page.dart';
 import 'package:chess_openings_trainer/openings_score_page.dart';
 
@@ -84,32 +85,42 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildTitle(String title, IconData icon) {
     return InkWell(
-      onTap: () {
+      onTap: () async {
+        final currentUser = FirebaseAuth.instance.currentUser;
         if (title == 'Train openings') {
-          var push = Navigator.push(context,
+          await Navigator.push(context,
               MaterialPageRoute(builder: (context) => const OpeningsPage()));
         } else if (title == 'Play openings') {
-          var push = Navigator.push(context,
+          await Navigator.push(context,
               MaterialPageRoute(builder: (context) => const PlayOpenings()));
         } else if (title == 'Openings score') {
-          var push = Navigator.push(
+          await Navigator.push(
               context,
               MaterialPageRoute(
                   builder: (context) => const CountingScoreOpenings()));
         } else if (title == 'Play game') {
-          var push = Navigator.push(context,
-              MaterialPageRoute(builder: (context) => const GameBoard(gameId: 'test',)));
+          await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const GameBoard(
+                        gameId: 'test',
+                      )));
         } else if (title == 'Community') {
-          var push = Navigator.push(context,
+          await Navigator.push(context,
               MaterialPageRoute(builder: (context) => const CommunityPage()));
         } else if (title == 'Profile') {
-          var push = Navigator.push(
-              context, MaterialPageRoute(builder: (context) => ProfilePage()));
+          if (currentUser != null) {
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        ProfilePage(userId: currentUser.uid)));
+          }
         } else if (title == 'Friends') {
-          var push = Navigator.push(
+          await Navigator.push(
               context, MaterialPageRoute(builder: (context) => FriendsPage()));
         } else if (title == 'Test_lobby') {
-          var push = Navigator.push(
+          await Navigator.push(
               context, MaterialPageRoute(builder: (context) => LobbyPage()));
         }
         print('$title tapped!');
