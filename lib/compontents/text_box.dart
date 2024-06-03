@@ -1,60 +1,41 @@
-import "package:flutter/material.dart";
+import 'package:flutter/material.dart';
 
 class MyTextBox extends StatelessWidget {
   final String text;
   final String sectionName;
-  final void Function()? onPressed;
+  final Function? onPressed;
   final bool showEditIcon;
 
-  const MyTextBox({
-    super.key,
+  MyTextBox({
     required this.text,
     required this.sectionName,
-    required this.onPressed,
+    this.onPressed,
     this.showEditIcon = true,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[600],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      margin: const EdgeInsets.only(
-        left: 20,
-        right: 20,
-        top: 20,
-      ),
-      child: ConstrainedBox(
-        // Zastosowanie ConstrainedBox
-        constraints: BoxConstraints(
-          minHeight: 60, // Minimalna wysokość każdego pola
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 25.0, vertical: 10.0),
+      child: Container(
+        padding: const EdgeInsets.all(20.0),
+        decoration: BoxDecoration(
+          color: Colors.grey[800],
+          borderRadius: BorderRadius.circular(8),
         ),
-        child: Padding(
-          padding: const EdgeInsets.only(
-            left: 15,
-            bottom: 15,
-            top: 15, // Dodałem padding górny
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    sectionName,
-                    style: TextStyle(color: Colors.grey[500]),
-                  ),
-                  if (showEditIcon)
-                    IconButton(
-                        onPressed: onPressed, icon: Icon(Icons.settings)),
-                ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              text,
+              style: TextStyle(color: Colors.white),
+            ),
+            if (showEditIcon && onPressed != null)
+              IconButton(
+                icon: Icon(Icons.edit, color: Colors.white),
+                onPressed: () => onPressed!(),
               ),
-              Text(text),
-            ],
-          ),
+          ],
         ),
       ),
     );

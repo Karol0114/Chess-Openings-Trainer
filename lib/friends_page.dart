@@ -150,36 +150,62 @@ class _FriendsListState extends State<FriendsList> {
                       itemCount: friends.length,
                       itemBuilder: (context, index) {
                         var friend = friends[index];
-                        return Card(
-                          margin: EdgeInsets.symmetric(
-                              vertical: 8.0, horizontal: 16.0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15.0),
-                          ),
-                          elevation: 4,
-                          child: ListTile(
-                            contentPadding: EdgeInsets.symmetric(
-                                vertical: 10.0, horizontal: 20.0),
-                            title: Text(
-                              friend['username'],
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            trailing:
-                                Icon(Icons.chat, color: Colors.blueAccent),
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatPage(
-                                      friendId: friend.id,
-                                      friendName: friend['username']),
-                                ),
+                        var friendId = friend.id;
+
+                        return FutureBuilder<DocumentSnapshot>(
+                          future:
+                              firestore.collection('Users').doc(friendId).get(),
+                          builder: (context,
+                              AsyncSnapshot<DocumentSnapshot> friendSnapshot) {
+                            if (friendSnapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return ListTile(
+                                title: Text('Loading...'),
                               );
-                            },
-                          ),
+                            }
+
+                            if (!friendSnapshot.hasData ||
+                                !friendSnapshot.data!.exists) {
+                              return Container(); // Ignore non-existing friends
+                            }
+
+                            var friendData = friendSnapshot.data!.data()
+                                as Map<String, dynamic>;
+                            var friendName =
+                                friendData['username'] ?? 'Unknown';
+
+                            return Card(
+                              margin: EdgeInsets.symmetric(
+                                  vertical: 8.0, horizontal: 16.0),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15.0),
+                              ),
+                              elevation: 4,
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(
+                                    vertical: 10.0, horizontal: 20.0),
+                                title: Text(
+                                  friendName,
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                trailing:
+                                    Icon(Icons.chat, color: Colors.blueAccent),
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => ChatPage(
+                                          friendId: friendId,
+                                          friendName: friendName),
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
                         );
                       },
                     );

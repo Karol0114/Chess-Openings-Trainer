@@ -160,19 +160,25 @@ class _ProfilePageState extends State<ProfilePage> {
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.only(left: 25.0),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 25.0),
                 child: Text(
-                  'Szczegóły',
+                  'username',
                   style: TextStyle(color: Colors.grey[600]),
                 ),
               ),
               MyTextBox(
                 text: userData['username'] ?? 'brak nazwy użytkownika',
                 sectionName: 'username',
-                onPressed: isCurrentUser
-                    ? () => editField('username',
-                        userData['username'] ?? 'brak nazwy użytkownika')
-                    : null,
-                showEditIcon: isCurrentUser,
+                showEditIcon: false,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 25.0),
+                child: Text(
+                  'bio',
+                  style: TextStyle(color: Colors.grey[600]),
+                ),
               ),
               MyTextBox(
                 text: userData['bio'] ?? 'brak bio',
