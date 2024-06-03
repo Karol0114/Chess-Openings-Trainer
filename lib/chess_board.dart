@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:chess_openings_trainer/compontents/dead_piece.dart';
 import 'package:chess_openings_trainer/compontents/piece.dart';
 import 'package:chess_openings_trainer/helper/helper_methods.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter/rendering.dart';
 import 'package:chess_openings_trainer/compontents/square.dart';
@@ -16,7 +18,16 @@ class GameBoard extends StatefulWidget {
 }
 
 class _GameBoardState extends State<GameBoard> {
+  late StreamSubscription<DocumentSnapshot> _gameStream;
 
+
+
+void makeMove(String move) {
+  // Funkcja, która wykonuje ruch i zapisuje go w Firestore
+  FirebaseFirestore.instance.collection('games').doc(widget.gameId).update({
+    'moves': FieldValue.arrayUnion([move])
+  });
+}
   // tablica 2 wymairowa ktora bedzie reprezentować plansze zachową, wraz z odpowiednią pozycja srtartową figury
 
   late List<List<ChessPiece?>> board;
@@ -91,11 +102,52 @@ class _GameBoardState extends State<GameBoard> {
 
 
 
-  @override 
+  @override
   void initState() {
     super.initState();
     _initializeBoard();
+    _gameStream = FirebaseFirestore.instance.collection('games').doc(widget.gameId)
+        .snapshots().listen((snapshot) {
+      if (snapshot.exists) {
+        var gameData = snapshot.data()!;
+        updateBoard(gameData['moves']);
+      }
+    });
   }
+
+   void updateBoard(List<dynamic> moves) {
+  // Resetowanie planszy do stanu początkowego
+  _initializeBoard();
+
+  // Iteracja przez każdy ruch zapisany w Firestore
+  for (String move in moves) {
+    List<String> positions = move.split('-');
+    List<int> startPos = positions[0].split(',').map((x) => int.parse(x)).toList();
+    List<int> endPos = positions[1].split(',').map((x) => int.parse(x)).toList();
+
+    // Przeniesienie figury
+    ChessPiece? movingPiece = board[startPos[0]][startPos[1]];
+    board[endPos[0]][endPos[1]] = movingPiece;
+    board[startPos[0]][startPos[1]] = null;
+
+    // Sprawdzenie promocji pionka
+    if (movingPiece != null && movingPiece.type == ChessPieceType.pawn && (endPos[0] == 0 || endPos[0] == 7)) {
+      promotePawn(endPos[0], endPos[1], movingPiece.isWhite);
+    }
+
+    // Aktualizacja pozycji królów w razie ruchu króla
+    if (movingPiece != null && movingPiece.type == ChessPieceType.king) {
+      if (movingPiece.isWhite) {
+        whiteKingPosition = [endPos[0], endPos[1]];
+      } else {
+        blackKingPosition = [endPos[0], endPos[1]];
+      }
+    }
+  }
+
+  // Uaktualnienie stanu aplikacji
+  setState(() {});
+}
   // Inicjalizacja planszy
   void _initializeBoard() {
     // Zainicjalizujmy plansze, z wartościami null, ktore oznaczac beda brak figur na danym polu, a do reszty pol przypiszemy odpowiednio figury 

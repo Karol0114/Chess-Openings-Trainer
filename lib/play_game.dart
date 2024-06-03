@@ -22,8 +22,7 @@ class _LobbyPageState extends State<LobbyPage> {
       "gameResult": null
     };
 
-    DocumentReference gameRef =
-        await FirebaseFirestore.instance.collection('games').add(newGame);
+    DocumentReference gameRef = await FirebaseFirestore.instance.collection('games').add(newGame);
     return gameRef.id; // Zwróć ID gry, które będzie używane do dołączania do gry
   }
 
